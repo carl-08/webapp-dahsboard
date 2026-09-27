@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="title desc">
+  <title id="title">Illustrative event snapshot placeholder</title>
+  <desc id="desc">A stylized indoor hallway placeholder, not a live camera feed.</desc>
+  <defs>
+    <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#d7e2db"/><stop offset="1" stop-color="#aabeb1"/></linearGradient>
+    <linearGradient id="floor" x2="0" y2="1"><stop stop-color="#9b8e7d"/><stop offset="1" stop-color="#5e6257"/></linearGradient>
+  </defs>
+  <rect width="960" height="540" fill="#273a34"/>
+  <path d="M0 0h960v354L480 275 0 354z" fill="url(#wall)"/>
+  <path d="M0 354 480 275l480 79v186H0z" fill="url(#floor)"/>
+  <path d="m355 94 250 8v225l-250 25z" fill="#5f776a"/>
+  <path d="m378 116 204 6v195l-204 22z" fill="#d8e4da"/>
+  <path d="M480 122v190" stroke="#98aa9e" stroke-width="5"/>
+  <path d="m60 55 166 28v201L60 312z" fill="#b8c9be"/>
+  <path d="m83 76 120 20v164L83 280z" fill="#748e80"/>
+  <path d="M0 352 480 275l480 79M0 540l480-145 480 145M0 440l480-103 480 103" fill="none" stroke="#d6cdbc" stroke-opacity=".42" stroke-width="3"/>
+  <path d="M480 275v265" stroke="#d6cdbc" stroke-opacity=".35" stroke-width="3"/>
+  <rect x="26" y="24" width="908" height="492" rx="8" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="2"/>
+  <circle cx="900" cy="58" r="8" fill="#ca745f"/>
+  <text x="35" y="493" fill="#fff" fill-opacity=".84" font-family="Arial,sans-serif" font-size="17" letter-spacing="1">ILLUSTRATIVE DEMO FRAME · NOT A LIVE FEED</text>
+</svg>
