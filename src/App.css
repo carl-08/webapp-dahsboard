@@ -302,3 +302,28 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .enrollment-steps i { width: 10px; flex: 1; }
   .pending-date { width: 100%; padding-left: 56px; }
 }
+
+
+/* Haven visual refinement: calmer surfaces, clearer hierarchy, and stronger keyboard focus. */
+:root { --haven-forest: #173d34; --haven-green: #39724f; --haven-mint: #b7dec5; --haven-page: #f6f8f5; --haven-line: #e3e9e3; }
+body { background: var(--haven-page); }
+.app-shell { font-size: 12px; letter-spacing: .005em; }
+.sidebar { width: 258px; padding: 27px 18px 17px; box-shadow: 5px 0 24px rgb(22 50 37 / 4%); }
+.main-area { margin-left: 258px; }
+.topbar { height: 70px; padding-inline: clamp(22px, 3.2vw, 48px); box-shadow: 0 3px 14px rgb(29 48 36 / 2%); }
+.page-content { padding: clamp(26px, 3vw, 42px) clamp(22px, 3.2vw, 48px) 25px; }
+.page-heading { margin-bottom: 26px; }
+h1 { letter-spacing: -.75px; }
+.panel, .stat-card, .thesis-panel, .history-panel, .system-card, .settings-panel { border-color: var(--haven-line); box-shadow: 0 5px 20px rgb(33 57 41 / 3%); }
+.nav-item { border-radius: 9px; }
+.nav-item-active, .nav-item-active:hover { box-shadow: inset 3px 0 0 #a8d4bd; }
+.search-box { min-height: 37px; border-radius: 9px; }
+.icon-button { width: 37px; height: 37px; border-radius: 9px; }
+.status-strip, .thesis-status-strip { border-radius: 11px; }
+.demo-chip { border-radius: 5px; letter-spacing: .08em; }
+.page-footer { margin-top: 27px; padding-top: 15px; border-top: 1px solid #e6ebe5; }
+.profile-button { gap: 9px; }
+.sign-out-button { flex: 0 0 auto; padding: 6px 8px; color: #b9d5c4; background: rgb(255 255 255 / 6%); border: 1px solid rgb(255 255 255 / 13%); border-radius: 6px; font-size: 9px; }
+.sign-out-button:hover { color: #fff; background: rgb(255 255 255 / 12%); }
+@media (max-width: 1020px) { .sidebar { width: 242px; } .main-area { margin-left: 242px; } }
+@media (max-width: 780px) { .sidebar { width: 258px; } .main-area { margin-left: 0; } .topbar { height: 62px; padding-inline: 15px; } .page-content { padding: 25px 15px 20px; } }
