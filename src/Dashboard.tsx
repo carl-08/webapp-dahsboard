@@ -30,7 +30,7 @@ const subtitles: Record<Page, string> = {
   'System Settings': 'Prototype identity and data privacy information.',
 }
 
-export default function Dashboard() {
+export default function Dashboard({ authenticatedEmail, onSignOut }: { authenticatedEmail: string; onSignOut: () => void }) {
   const [page, setPage] = useState<Page>('Overview')
   const [notifications, setNotifications] = useState(() => notificationsFromEvents(demoEvents))
   const [selectedEvent, setSelectedEvent] = useState<SecurityEvent | null>(null)
@@ -71,7 +71,7 @@ export default function Dashboard() {
       <div className="home-switcher"><span className="home-avatar">H</span><span className="home-copy"><strong>{homeName}</strong><small>Thesis prototype · Demo data</small></span><ChevronDown size={15} /></div>
       {groups.map((group) => <div className="nav-group" key={group.title}><span className="nav-label">{group.title}</span><nav className="primary-nav" aria-label={group.title}>{group.items.map(({ label, icon: Icon }) => <button key={label} className={`nav-item ${page === label ? 'nav-item-active' : ''}`} onClick={() => navigate(label)}><Icon size={18} /><span>{label}</span>{label === 'Alerts' && <span className="nav-count">{reviewEvents.length}</span>}</button>)}</nav></div>)}
       <div className="sidebar-spacer" /><div className="sidebar-protection"><span className="protection-icon"><ShieldCheck size={18} /></span><div><strong>Audio-first monitoring</strong><small>Face recognition on event</small></div><span className="status-dot" /></div>
-      <div className="profile-button"><span className="profile-avatar">{memberName.slice(0, 1).toUpperCase()}</span><span className="profile-copy"><strong>{memberName}</strong><small>Enrolled household member</small></span><ChevronDown size={15} /></div>
+      <div className="profile-button"><span className="profile-avatar">{authenticatedEmail.slice(0, 1).toUpperCase()}</span><span className="profile-copy"><strong>{authenticatedEmail}</strong><small>Authorized account</small></span><button className="sign-out-button" onClick={onSignOut} aria-label="Sign out">Sign out</button></div>
     </aside>
     {mobileNavOpen && <button className="nav-scrim" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)} />}
     <main className="main-area">
