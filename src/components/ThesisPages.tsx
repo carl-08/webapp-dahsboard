@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import {
   Activity, ArrowUpRight, Bell, Check, CircleAlert, Clock3, Info,
   Cpu, Database, Mic2, Search, ShieldCheck, SlidersHorizontal,
-  Smartphone, UserRound, Users, Video, Wifi, type LucideIcon,
+  Smartphone, UserRound, Users, Video, Wifi, Radio, AudioLines, Power, type LucideIcon,
 } from 'lucide-react'
 import { AcousticBadge, DecisionBadge } from './thesisBadges'
 import { acousticClasses, faceResults, type SecurityEvent } from '../models/securityEvent'
@@ -18,12 +18,49 @@ export function OverviewPage({ events, alerts, eventsToday, onOpenEvent, onNavig
   const bars = Array.from({ length: 12 }, (_, index) => events.filter((event) => Math.floor(new Date(event.timestamp).getHours() / 2) === index).length)
   const maxBar = Math.max(1, ...bars)
   return <>
+    <LiveMonitoringPanel />
     <section className="status-strip thesis-status-strip"><div className="status-intro"><span className="status-emblem"><ShieldCheck size={22} /></span><div><strong>Prototype preview · DEMO</strong><span>Illustrative state · hardware telemetry not connected</span></div></div><div className="thesis-status-metrics"><StatusMetric icon={Mic2} title="DEMO" label="Audio pipeline" tone="green" /><StatusMetric icon={Video} title="NOT CONNECTED" label="Camera buffer" tone="blue" /><StatusMetric icon={UserRound} title="PLANNED" label="Recognition on event" tone="amber" /><StatusMetric icon={Database} title="NOT CONNECTED" label="Firebase sync" tone="muted" /></div></section>
     <section className="pipeline-strip"><span className="pipeline-label">EVENT WORKFLOW</span>{['Audio monitoring', 'Audio classification', 'Qualifying event', 'Visual verification', 'Rule-based decision', 'Alert / response', 'Event log + snapshot + notifications'].map((step, index) => <div className="pipeline-step" key={step}><span className="pipeline-number">0{index + 1}</span><span>{step}</span>{index < 6 && <i>→</i>}</div>)}</section>
     <section className="stats-grid thesis-stats-grid"><StatCard label="Active alerts" value={alerts} hint="Unread demo notifications" tone="red" icon={Bell} /><StatCard label="Events today" value={eventsToday} hint="Local demo dataset" tone="green" icon={Activity} /><StatCard label="Devices online" value="—" hint="No live device telemetry" tone="blue" icon={Wifi} /><StatCard label="Avg. response" value="1.42 s" hint="Sample · not measured" tone="amber" icon={Clock3} /></section>
     <div className="content-grid thesis-content-grid"><section className="panel chart-panel"><div className="panel-heading"><div><h2>Acoustic Events · Demo Dataset</h2><p>Sample events per two-hour window · not live measurements</p></div><span className="stat-period">LAST 24 HOURS</span></div><div className="event-chart">{bars.map((count, index) => <div className="event-chart-column" key={index}><span className={`event-chart-bar ${count ? 'has-events' : ''}`} style={{ height: `${count ? Math.max(14, count / maxBar * 100) : 5}%` }} title={`${count} sample events`} /><small>{String(index * 2).padStart(2, '0')}</small></div>)}</div><div className="chart-legend"><span><i /> Sample acoustic events</span><span>Demo records only</span></div></section><section className="panel distribution-panel"><div className="panel-heading"><div><h2>Events by acoustic class</h2><p>Counts in sample dataset</p></div></div><div className="class-count-list">{counts.map(({ label, count }) => <div className="class-count-row" key={label}><AcousticBadge acousticClass={label} /><strong>{count}</strong></div>)}</div></section></div>
     <section className="panel events-panel thesis-events-panel"><div className="panel-heading"><div><h2>Recent acoustic events</h2><p>Audio classification followed by contextual visual verification</p></div><button className="text-button" onClick={() => onNavigate('Event History')}>Event history <ArrowUpRight size={15} /></button></div><EventTable events={events.slice(0, 5)} onOpenEvent={onOpenEvent} compact /></section>
   </>
+}
+
+
+
+function LiveMonitoringPanel() {
+  const [motionEnabled, setMotionEnabled] = useState(false)
+  const [audioMode, setAudioMode] = useState<'prototype' | 'browser'>('prototype')
+  const bars = [12, 20, 9, 29, 16, 24, 11, 32, 19, 13, 27, 16, 35, 22, 11, 25, 17, 30, 14, 23, 10, 28, 18, 12, 32, 20, 15, 26, 11, 22, 16, 30, 12, 25, 18, 9, 28, 15, 21, 13, 31, 18, 11, 24, 15, 27, 10, 20]
+  return <section className="live-monitor-grid" aria-label="Live monitoring controls">
+    <article className="panel live-audio-card">
+      <div className="live-card-heading">
+        <div className="live-card-title"><span className="live-card-icon"><AudioLines size={18} /></span><div><h2>Live audio feed</h2><p>Prototype microphone · Raspberry Pi 5</p></div></div>
+        <span className="connection-pill connection-off"><i /> NOT CONNECTED</span>
+      </div>
+      <div className="audio-feed-preview">
+        <div className="audio-feed-topline"><span><Radio size={13} /> AUDIO INPUT</span><span>Awaiting device stream</span></div>
+        <div className="audio-waveform" role="img" aria-label="Static waveform placeholder, not live audio">{bars.map((height, index) => <i key={index} style={{ height: height + 'px' }} />)}</div>
+        <div className="audio-feed-footer"><span><span className="audio-status-dot" /> No live signal</span><span>Level: — dBFS</span><span>Classification: waiting</span></div>
+      </div>
+      <div className="audio-card-bottom"><span>Live waveform will appear when the Pi stream is connected.</span><button className="monitor-secondary-button" onClick={() => setAudioMode((mode) => mode === 'prototype' ? 'browser' : 'prototype')}>Input: {audioMode === 'prototype' ? 'Prototype mic' : 'Browser preview'}</button></div>
+      <p className="preview-note">Input selector is a UI preview only; it does not open a microphone or connect to hardware.</p>
+    </article>
+    <article className="panel motion-control-card">
+      <div className="live-card-heading">
+        <div className="live-card-title"><span className="live-card-icon motion-icon"><Activity size={18} /></span><div><h2>Motion sensor</h2><p>Raspberry Pi GPIO control</p></div></div>
+        <span className="connection-pill connection-off"><i /> DEVICE OFFLINE</span>
+      </div>
+      <div className="motion-state-panel">
+        <div className="motion-state-icon"><Activity size={24} /></div>
+        <div><span className="motion-state-label">SENSOR MONITORING</span><strong>{motionEnabled ? 'Enabled · UI preview' : 'Disabled · UI preview'}</strong><small>Hardware state unavailable</small></div>
+      </div>
+      <div className="motion-toggle-row"><div><strong>Motion detection</strong><small>{motionEnabled ? 'Preview switch is on' : 'Preview switch is off'}</small></div><button type="button" className={`motion-toggle ${motionEnabled ? 'motion-toggle-on' : ''}`} role="switch" aria-checked={motionEnabled} aria-label="Toggle motion sensor UI preview" onClick={() => setMotionEnabled((enabled) => !enabled)}><span /></button></div>
+      <div className="motion-last-event"><span>LAST MOTION EVENT</span><strong>—</strong><small>No live sensor data received</small></div>
+      <div className="motion-warning"><Info size={14} /><span>This switch only previews the interface. It will control the physical sensor after the authenticated device API is connected.</span></div>
+    </article>
+  </section>
 }
 
 function StatusMetric({ icon: Icon, title, label, tone }: { icon: LucideIcon; title: string; label: string; tone: string }) {
