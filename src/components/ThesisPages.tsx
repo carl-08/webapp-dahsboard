@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import {
   Activity, ArrowUpRight, Bell, Check, CircleAlert, Clock3, Info,
   Cpu, Database, Mic2, Search, ShieldCheck, SlidersHorizontal,
@@ -12,13 +12,57 @@ import type { EventFilters } from '../services/eventService'
 const formatTime = (timestamp: string) => new Intl.DateTimeFormat('en', { hour: 'numeric', minute: '2-digit' }).format(new Date(timestamp))
 const formatDate = (timestamp: string) => new Intl.DateTimeFormat('en', { month: '2-digit', day: '2-digit', year: 'numeric' }).format(new Date(timestamp))
 const formatShortDate = (timestamp: string) => new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(timestamp))
+const initialRenderTime = Date.now()
 
-export function OverviewPage({ events, alerts, eventsToday, onOpenEvent, onNavigate }: { events: SecurityEvent[]; alerts: number; eventsToday: number; onOpenEvent: (event: SecurityEvent) => void; onNavigate: (page: 'Event History') => void }) {
+export type DemoRole = 'Administrator' | 'Household member'
+export type DemoWorkflowState = 'idle' | 'face-check' | 'verification' | 'safe' | 'high-alert'
+export interface GuestPass {
+  id: string
+  guestName: string
+  durationDays: number
+  createdAt: string
+  expiresAt: string
+}
+
+export function OverviewPage({ events, alerts, eventsToday, onOpenEvent, onNavigate, demoRole, onDemoRoleChange, isAdministrator, advancedMode, onAdvancedModeChange, workflowState, faceCheckRemaining, onSimulateMotion }: {
+  events: SecurityEvent[]
+  alerts: number
+  eventsToday: number
+  onOpenEvent: (event: SecurityEvent) => void
+  onNavigate: (page: 'Event History') => void
+  demoRole: DemoRole
+  onDemoRoleChange: (role: DemoRole) => void
+  isAdministrator: boolean
+  advancedMode: boolean
+  onAdvancedModeChange: (enabled: boolean) => void
+  workflowState: DemoWorkflowState
+  faceCheckRemaining: number
+  onSimulateMotion: () => void
+}) {
   const counts = acousticClasses.map((label) => ({ label, count: events.filter((event) => event.acousticClass === label).length }))
   const bars = Array.from({ length: 12 }, (_, index) => events.filter((event) => Math.floor(new Date(event.timestamp).getHours() / 2) === index).length)
   const maxBar = Math.max(1, ...bars)
   return <>
     <section className="status-strip thesis-status-strip"><div className="status-intro"><span className="status-emblem"><ShieldCheck size={22} /></span><div><strong>System Protected · ONLINE</strong><span>Audio-first monitoring · edge-computing prototype</span></div></div><div className="thesis-status-metrics"><StatusMetric icon={Mic2} title="ACTIVE" label="Audio monitoring" tone="green" /><StatusMetric icon={Video} title="READY" label="Camera buffer" tone="blue" /><StatusMetric icon={UserRound} title="STANDBY" label="Recognition on event" tone="amber" /><StatusMetric icon={Database} title="NOT CONFIGURED" label="Firebase" tone="muted" /></div></section>
+    <section className="monitoring-mode-grid">
+      <article className="panel mode-card">
+        <div className="mode-card-heading"><div><span className="mode-kicker">MONITORING MODES</span><h2>Standard Mode <span className="mode-state mode-state-active">ACTIVE</span></h2><p>Audio-first monitoring is the default household mode.</p></div><span className="mode-icon"><Mic2 size={18} /></span></div>
+        <div className="advanced-mode-row"><div><strong>Advanced Monitoring Mode</strong><p>Enable motion-triggered face checks and enhanced verification prompts.</p></div><span className={`mode-state ${advancedMode ? 'mode-state-active' : 'mode-state-off'}`}>{advancedMode ? 'ON' : 'OFF'}</span></div>
+        <div className="mode-controls">
+          <label className="demo-role-control">Preview role<select value={demoRole} onChange={(event) => onDemoRoleChange(event.target.value as DemoRole)}><option value="Administrator">Administrator</option><option value="Household member">Household member</option></select></label>
+          <div className="mode-toggle-control"><span>{isAdministrator ? 'Administrator control' : 'Administrator only'}</span><button className={`toggle-switch ${advancedMode ? 'toggle-on' : ''}`} type="button" role="switch" aria-checked={advancedMode} aria-label="Advanced Monitoring Mode" disabled={!isAdministrator} onClick={() => onAdvancedModeChange(!advancedMode)}><span /></button></div>
+        </div>
+        <p className="prototype-disclaimer">Role preview and access gating are simulated in this UI; there is no authentication or authorization service.</p>
+      </article>
+      <article className="panel workflow-card">
+        <div className="mode-card-heading"><div><span className="mode-kicker">MOTION WORKFLOW</span><h2>Event-triggered face check</h2><p>Motion notification → 10-second check → L2 review when unknown.</p></div><span className="workflow-icon"><Bell size={18} /></span></div>
+        {workflowState !== 'idle' && <div className="motion-notification" role="status"><Bell size={14} /><span><strong>Motion detected</strong> · simulated dashboard notification</span></div>}
+        <div className="workflow-state-row"><span className={`workflow-status-dot ${workflowState !== 'idle' ? 'workflow-status-active' : ''}`} /><strong>{workflowState === 'face-check' ? `Face check in progress · ${faceCheckRemaining}s` : workflowState === 'verification' ? 'Unknown person · L2 verification active' : workflowState === 'safe' ? 'Marked safe · review complete' : workflowState === 'high-alert' ? 'Escalated · L4 High Alert' : 'Waiting for a motion event'}</strong></div>
+        <button className="primary-button workflow-start-button" type="button" disabled={!isAdministrator || !advancedMode} onClick={onSimulateMotion}><Activity size={14} /> Simulate motion event</button>
+        {!advancedMode && <p className="workflow-hint">Enable Advanced Monitoring Mode to run the motion-check demonstration.</p>}
+        <p className="prototype-disclaimer">Simulation only: no motion sensor, camera, facial recognition, or push notification is connected.</p>
+      </article>
+    </section>
     <section className="pipeline-strip"><span className="pipeline-label">EVENT WORKFLOW</span>{['Audio monitoring', 'Audio classification', 'Qualifying event', 'Visual verification', 'Rule-based decision', 'Alert / response', 'Event log + snapshot + notifications'].map((step, index) => <div className="pipeline-step" key={step}><span className="pipeline-number">0{index + 1}</span><span>{step}</span>{index < 6 && <i>→</i>}</div>)}</section>
     <section className="stats-grid thesis-stats-grid"><StatCard label="Active alerts" value={alerts} hint="Unread demo notifications" tone="red" icon={Bell} /><StatCard label="Events today" value={eventsToday} hint="Local demo dataset" tone="green" icon={Activity} /><StatCard label="Devices online" value={`${demoDevices.length} / ${demoDevices.length}`} hint="Mock status · not telemetry" tone="blue" icon={Wifi} /><StatCard label="Avg. response" value="1.42 s" hint="Sample · not measured" tone="amber" icon={Clock3} /></section>
     <div className="content-grid thesis-content-grid"><section className="panel chart-panel"><div className="panel-heading"><div><h2>Acoustic Events · Demo Dataset</h2><p>Sample events per two-hour window · not live measurements</p></div><span className="stat-period">LAST 24 HOURS</span></div><div className="event-chart">{bars.map((count, index) => <div className="event-chart-column" key={index}><span className={`event-chart-bar ${count ? 'has-events' : ''}`} style={{ height: `${count ? Math.max(14, count / maxBar * 100) : 5}%` }} title={`${count} sample events`} /><small>{String(index * 2).padStart(2, '0')}</small></div>)}</div><div className="chart-legend"><span><i /> Sample acoustic events</span><span>Demo records only</span></div></section><section className="panel distribution-panel"><div className="panel-heading"><div><h2>Events by acoustic class</h2><p>Counts in sample dataset</p></div></div><div className="class-count-list">{counts.map(({ label, count }) => <div className="class-count-row" key={label}><AcousticBadge acousticClass={label} /><strong>{count}</strong></div>)}</div></section></div>
@@ -125,6 +169,96 @@ export function NotificationSettingsPage({ settings, setSettings }: { settings: 
 
 export function SystemSettingsPage({ homeName, setHomeName, savedHomeName, saveName }: { homeName: string; setHomeName: (name: string) => void; savedHomeName: string; saveName: () => void }) {
   return <div className="settings-layout"><section className="panel settings-panel"><div className="panel-heading"><div><h2>System preferences</h2><p>Prototype identity and data privacy information.</p></div></div><div className="system-setting-form"><label className="field-label">Home / system name<input value={homeName} onChange={(event) => setHomeName(event.target.value)} /></label><button className="secondary-button" onClick={saveName}>Save name</button><span className="save-status">{homeName === savedHomeName ? 'Saved in this session' : 'Unsaved changes'}</span></div><div className="privacy-info"><h3>Data and privacy</h3><p>Sample events are frontend demo data only. Firebase is not configured. This interface stores no credentials, raw audio, continuous video, or facial embeddings.</p></div><div className="privacy-info"><h3>Theme and status</h3><p>Haven’s existing light theme is preserved. Authentication and live telemetry are not implemented.</p></div></section></div>
+}
+
+export function L2VerificationPage({ workflowState, remainingSeconds, faceCheckRemaining, onSafe, onNotSafe, onStartDemo }: {
+  workflowState: DemoWorkflowState
+  remainingSeconds: number
+  faceCheckRemaining: number
+  onSafe: () => void
+  onNotSafe: () => void
+  onStartDemo: () => void
+}) {
+  const countdown = `${String(Math.floor(remainingSeconds / 60)).padStart(2, '0')}:${String(remainingSeconds % 60).padStart(2, '0')}`
+  return <section className="verification-screen">
+    <div className="verification-heading"><span className="verification-level">L2 · VERIFICATION</span><span className="demo-chip">SIMULATED WORKFLOW</span></div>
+    {workflowState === 'verification' ? <article className="verification-prompt panel">
+      <div className="verification-timer"><Clock3 size={17} /><span>Response window</span><strong role="timer" aria-label={`${remainingSeconds} seconds remaining`}>{countdown}</strong></div>
+      <div className="verification-content"><span className="verification-symbol"><UserRound size={25} /></span><div><h2>Unknown person detected</h2><p>A simulated face check found no enrolled household match. Please confirm whether this person is safe.</p></div></div>
+      <div className="verification-context"><ShieldCheck size={16} /><span>Face recognition is contextual; an unknown match is not, by itself, a threat determination.</span></div>
+      <div className="verification-actions"><button className="safe-action" type="button" onClick={onSafe}><Check size={16} /> Safe</button><button className="unsafe-action" type="button" onClick={onNotSafe}><CircleAlert size={16} /> Not Safe</button></div>
+      <p className="prototype-disclaimer">Safe / Not Safe responses and the 60-second timer are local UI simulation only.</p>
+    </article> : workflowState === 'face-check' ? <article className="verification-empty panel"><span className="workflow-icon"><Video size={19} /></span><h2>10-second face check in progress</h2><p>Motion was detected in the simulated workflow. The L2 prompt will appear after the face-check timer completes.</p><div className="face-check-progress"><span style={{ width: `${((10 - faceCheckRemaining) / 10) * 100}%` }} /></div><strong>{faceCheckRemaining} seconds remaining</strong></article> : workflowState === 'safe' ? <article className="verification-empty panel verification-safe-result"><span className="verification-symbol"><Check size={22} /></span><h2>Marked safe</h2><p>The simulated verification was resolved as safe. No L4 escalation was triggered.</p><span className="prototype-disclaimer">This response was not sent to a backend or physical alert device.</span></article> : <article className="verification-empty panel"><span className="verification-symbol"><UserRound size={23} /></span><h2>No active verification</h2><p>Run a sample unknown-person prompt to preview the L2 screen and its 60-second response window.</p><button className="primary-button" type="button" onClick={onStartDemo}><Bell size={14} /> Start simulated L2 prompt</button><span className="prototype-disclaimer">No camera, identity matching, or notifications are connected.</span></article>}
+  </section>
+}
+
+export function L4HighAlertPage({ active, onReturn }: { active: boolean; onReturn: () => void }) {
+  return <section className="high-alert-screen">
+    <div className="high-alert-heading"><span className="high-alert-level">L4 · HIGH ALERT</span><span className="demo-chip">SIMULATED WORKFLOW</span></div>
+    <article className={`high-alert-card panel ${active ? 'high-alert-active' : ''}`}>
+      <span className="high-alert-symbol"><ShieldCheck size={26} /></span>
+      <span className="high-alert-kicker">{active ? 'ESCALATION ACTIVE' : 'SCREEN PREVIEW'}</span>
+      <h2>{active ? 'High alert requires attention' : 'L4 High Alert screen'}</h2>
+      <p>{active ? 'The simulated L2 response window expired or was marked Not Safe. Review the event using your household’s response plan.' : 'This is the consistent L4 high-alert presentation. No active demo escalation is in progress.'}</p>
+      <div className="high-alert-facts"><span>Escalation level <strong>L4 High Alert</strong></span><span>Source <strong>{active ? 'L2 verification' : 'No active event'}</strong></span><span>System action <strong>UI state only</strong></span></div>
+      <p className="prototype-disclaimer">No SMS, physical alarm, emergency service, or backend alert is triggered by this screen.</p>
+      <button className="secondary-button" type="button" onClick={onReturn}>Return to overview</button>
+    </article>
+  </section>
+}
+
+export function GuestPassesPage({ passes, onCreatePass, onRevokePass }: {
+  passes: GuestPass[]
+  onCreatePass: (guestName: string, durationDays: number) => void
+  onRevokePass: (id: string) => void
+}) {
+  const [guestName, setGuestName] = useState('')
+  const [durationDays, setDurationDays] = useState(1)
+  const [currentTime, setCurrentTime] = useState(initialRenderTime)
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setCurrentTime(Date.now()), 60_000)
+    return () => window.clearInterval(interval)
+  }, [])
+
+  function submitPass(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const name = guestName.trim()
+    if (!name) return
+    onCreatePass(name, durationDays)
+    setGuestName('')
+    setDurationDays(1)
+  }
+
+  return <div className="guest-pass-layout">
+    <section className="panel guest-pass-panel">
+      <div className="panel-heading"><div><h2>Create a guest pass</h2><p>Choose a temporary household visit duration from 1 to 7 days.</p></div><span className="demo-chip">OPTIONAL · DEMO</span></div>
+      <form className="guest-pass-form" onSubmit={submitPass}>
+        <label className="field-label">Guest name<input value={guestName} onChange={(event) => setGuestName(event.target.value)} placeholder="Enter guest name" required maxLength={60} /></label>
+        <label className="field-label">Pass duration<select value={durationDays} onChange={(event) => setDurationDays(Number(event.target.value))}>{Array.from({ length: 7 }, (_, index) => index + 1).map((days) => <option key={days} value={days}>{days} {days === 1 ? 'day' : 'days'}</option>)}</select></label>
+        <button className="primary-button" type="submit" disabled={!guestName.trim()}><Users size={14} /> Create guest pass</button>
+      </form>
+      <p className="prototype-disclaimer guest-pass-note">Passes are stored in browser memory for this demo. They do not unlock a door, create an account, or grant access to recordings.</p>
+    </section>
+    <section className="panel guest-pass-panel">
+      <div className="panel-heading"><div><h2>Guest passes</h2><p>{passes.length} pass{passes.length === 1 ? '' : 'es'} created in this session.</p></div></div>
+      {passes.length ? <div className="guest-pass-list">{passes.map((pass) => {
+        const expired = new Date(pass.expiresAt).getTime() <= currentTime
+        return <article className="guest-pass-row" key={pass.id}><span className="guest-pass-avatar"><Users size={17} /></span><div className="guest-pass-info"><strong>{pass.guestName}</strong><span>{pass.durationDays} day{pass.durationDays === 1 ? '' : 's'} · expires {new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(pass.expiresAt))}</span></div><span className={`guest-pass-status ${expired ? 'guest-pass-expired' : ''}`}>{expired ? 'Expired' : 'Active · demo'}</span>{!expired && <button className="text-button" type="button" onClick={() => onRevokePass(pass.id)}>Revoke</button>}</article>
+      })}</div> : <div className="guest-pass-empty"><Users size={20} /><strong>No guest passes yet</strong><span>Create an optional pass for a 1–7 day visit.</span></div>}
+    </section>
+  </div>
+}
+
+export function PrivacySettingsPage({ isAdministrator }: { isAdministrator: boolean }) {
+  return <div className="privacy-settings-layout">
+    <div className="privacy-policy-banner"><ShieldCheck size={20} /><div><strong>Privacy policy preview</strong><p>These settings describe the thesis policy; this demo has no media-retention or authorization backend.</p></div><span className="demo-chip">POLICY · NOT ENFORCED</span></div>
+    <section className="privacy-policy-grid">
+      <article className="panel privacy-policy-card"><span className="privacy-policy-icon"><Clock3 size={18} /></span><span className="mode-kicker">EVENT MEDIA RETENTION</span><strong className="retention-value">15 days</strong><p>Event recordings and associated snapshots should be retained for no more than 15 days, then deleted.</p><span className="policy-status">Target policy · automatic deletion not implemented</span></article>
+      <article className="panel privacy-policy-card"><span className="privacy-policy-icon"><ShieldCheck size={18} /></span><span className="mode-kicker">RECORDING ACCESS</span><strong className="retention-value">Administrator only</strong><p>Guest passes do not grant access to recordings. Recording access is restricted in this UI to the administrator preview role.</p><span className="policy-status">{isAdministrator ? 'Demo role: recording preview visible' : 'Demo role: recording preview hidden'}</span></article>
+    </section>
+    <div className="privacy-enforcement-note"><Info size={16} /><p>The current app uses sample event data and an illustrative snapshot. Role checks only affect this interface; secure access control and 15-day deletion require backend storage, authentication, and enforcement.</p></div>
+  </div>
 }
 
 function EmptyState({ title, text }: { title: string; text: string }) {

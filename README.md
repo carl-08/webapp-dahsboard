@@ -1,32 +1,29 @@
-# React + TypeScript + Vite
+# Haven Home Thesis Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Frontend prototype for **Context-Aware Household Alert System Using Audio-Triggered Facial Recognition for False-Alarm Reduction**. The app is built with React, TypeScript, and Vite and keeps the dashboard, event history, household enrollment, and settings within one client-side interface.
 
-Currently, two official plugins are available:
+## Prototype interactions
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- The dashboard shows Standard Mode as active and Advanced Monitoring Mode off by default. The administrator/household-member role selector is a demo control, not authentication.
+- With Advanced Monitoring enabled in the demo, **Simulate motion event** starts a 10-second face-check countdown and then opens L2 Verification for an unknown-person sample. The L2 screen has a 60-second response window; **Safe** resolves it and **Not Safe** or timeout escalates to L4 High Alert.
+- Guest passes can be added for 1–7 days. They exist only in frontend memory and do not grant door or recording access.
+- Privacy Settings states the 15-day media-retention policy and administrator-only recording access. The demo role can hide the sample snapshot in the interface, but neither access control nor automatic deletion is enforced.
+- Sample events, device status, notifications, and snapshots are illustrative demo data.
 
-## React Compiler
+## Integration status
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+This repository does not connect to household hardware or backend services. Authentication, authorization, motion sensing, camera capture, facial recognition, persistent guest passes, automatic media deletion, SMS, physical alarms, and live telemetry are not implemented. The timed workflows and role restrictions demonstrate UI behavior only.
 
-## Expanding the Oxlint configuration
+## Development
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```sh
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Validate changes with:
+
+```sh
+npm run build
+npm run lint
+```

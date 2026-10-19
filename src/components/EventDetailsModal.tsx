@@ -5,6 +5,7 @@ import { DecisionBadge } from './thesisBadges'
 
 interface EventDetailsModalProps {
   event: SecurityEvent
+  canViewRecordings: boolean
   onClose: () => void
 }
 
@@ -24,7 +25,7 @@ const responseLabels: [keyof SecurityEvent['responses'], string][] = [
   ['smsNotification', 'SMS Notification'],
 ]
 
-export function EventDetailsModal({ event, onClose }: EventDetailsModalProps) {
+export function EventDetailsModal({ event, canViewRecordings, onClose }: EventDetailsModalProps) {
   useEffect(() => {
     function handleKeyDown(keyEvent: KeyboardEvent) {
       if (keyEvent.key === 'Escape') onClose()
@@ -42,7 +43,7 @@ export function EventDetailsModal({ event, onClose }: EventDetailsModalProps) {
         <section className="detail-section"><h3>Final decision</h3><div className="decision-detail"><span>Decision</span><DecisionBadge decision={event.decision} /></div></section>
         <section className="detail-section"><h3>System response</h3><div className="response-grid">{responseLabels.map(([key, label]) => <div className="response-state" key={key}><span className={`response-check ${event.responses[key] ? 'response-done' : ''}`}>{event.responses[key] ? <Check size={13} /> : null}</span><span>{label}</span><strong className={event.responses[key] ? 'response-triggered' : 'response-not-triggered'}>{event.responses[key] ? 'Triggered' : 'Not Triggered'}</strong></div>)}</div></section>
         <section className="detail-section"><h3>Processing</h3><div className="processing-grid"><Detail label="Audio Processing" value={`${event.processingTime.audio.toFixed(2)} s`} /><Detail label="Face Recognition" value={event.processingTime.face === null ? 'Not triggered' : `${event.processingTime.face.toFixed(2)} s`} /><Detail label="Total Response Time" value={`${event.processingTime.total.toFixed(2)} s`} /><span className="sample-label"><Clock3 size={13} /> Sample UI values · not measured</span></div></section>
-        <section className="detail-section snapshot-section"><div className="snapshot-heading"><div><h3>Recent Event Snapshot</h3><p>Selected visual context associated with this acoustic event</p></div><span className="snapshot-tag">DEMO SAMPLE</span></div>{event.snapshotUrl ? <img className="snapshot-image" src={event.snapshotUrl} alt="Illustrative demo frame, not a live camera feed" /> : <div className="snapshot-unavailable">No snapshot was captured for this non-qualifying acoustic event.</div>}<p className="snapshot-caption">Illustrative placeholder only. Actual captured event media requires camera and backend integration.</p></section>
+        <section className="detail-section snapshot-section"><div className="snapshot-heading"><div><h3>Recent Event Snapshot</h3><p>Selected visual context associated with this acoustic event</p></div><span className="snapshot-tag">DEMO SAMPLE</span></div>{!canViewRecordings ? <div className="snapshot-unavailable recording-restricted">Recording access is restricted to the administrator role in this demo.</div> : event.snapshotUrl ? <img className="snapshot-image" src={event.snapshotUrl} alt="Illustrative demo frame, not a live camera feed" /> : <div className="snapshot-unavailable">No snapshot was captured for this non-qualifying acoustic event.</div>}<p className="snapshot-caption">Illustrative placeholder only. Actual captured event media requires camera and backend integration.</p></section>
       </div>
     </section>
   </div>
