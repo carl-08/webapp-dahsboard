@@ -25,12 +25,11 @@ export interface GuestPass {
   expiresAt: string
 }
 
-export function OverviewPage({ events, alerts, advancedMode, onOpenEvent, onNavigate }: {
+export function OverviewPage({ events, advancedMode, onOpenEvent, onNavigate }: {
   events: SecurityEvent[]
-  alerts: SecurityEvent[]
   advancedMode: boolean
   onOpenEvent: (event: SecurityEvent) => void
-  onNavigate: (page: 'Monitoring Modes' | 'Motion Events' | 'Alerts' | 'Event History') => void
+  onNavigate: (page: 'Monitoring Modes' | 'Motion Events' | 'Notifications & Alerts' | 'Event History') => void
 }) {
   return <>
     <section className="dashboard-system-status">
@@ -43,8 +42,7 @@ export function OverviewPage({ events, alerts, advancedMode, onOpenEvent, onNavi
       <button className="secondary-button" type="button" onClick={() => onNavigate('Monitoring Modes')}>Monitoring controls <ArrowUpRight size={14} /></button>
     </section>
     <section className="panel dashboard-list-panel">
-      <div className="panel-heading"><div><h2>Active Alerts</h2><p>Sample alert records · not a live active-alert feed</p></div><button className="text-button" onClick={() => onNavigate('Alerts')}>View alert records <ArrowUpRight size={14} /></button></div>
-      {alerts.length ? <div className="dashboard-alert-list">{alerts.slice(0, 3).map((event) => <button className="dashboard-alert-row" key={event.id} onClick={() => onOpenEvent(event)}><span className={`dashboard-alert-level ${event.alertLevel.includes('Higher') ? 'dashboard-alert-urgent' : ''}`}><CircleAlert size={15} /></span><span className="dashboard-list-main"><strong>{event.acousticClass} · {event.alertLevel}</strong><small>{event.faceResult} · {formatShortDate(event.timestamp)} at {formatTime(event.timestamp)}</small></span><ArrowUpRight size={14} /></button>)}</div> : <div className="dashboard-empty">No sample alert records.</div>}
+      <div className="panel-heading"><div><h2>Notifications &amp; Alerts</h2><p>Review all alert levels and sample notification status in one place.</p></div><button className="text-button" onClick={() => onNavigate('Notifications & Alerts')}>Open notifications <ArrowUpRight size={14} /></button></div>
     </section>
     <section className="panel dashboard-list-panel">
       <div className="panel-heading"><div><h2>Recent Events</h2><p>Latest entries in the local sample event set</p></div><button className="text-button" onClick={() => onNavigate('Event History')}>Event history <ArrowUpRight size={14} /></button></div>

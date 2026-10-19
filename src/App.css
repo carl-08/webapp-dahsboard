@@ -786,6 +786,116 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .thesis-app .decision-detail > span { color: var(--text-secondary); }
 .thesis-app .sample-label { color: var(--pending-amber); }
 .thesis-app .nav-scrim { background: rgb(1 7 15 / 68%); }
+.thesis-app .notification-button { position: relative; }
+.thesis-app .notification-count {
+  position: absolute;
+  top: -4px;
+  right: -5px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  color: #fff;
+  background: var(--alert-red);
+  border: 2px solid var(--page-bg);
+  border-radius: 9px;
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 12px;
+  text-align: center;
+}
+.thesis-app .central-notifications { overflow: hidden; }
+.thesis-app .central-notifications-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px 15px;
+}
+.thesis-app .central-notifications-header h2 { margin: 0; color: var(--text-primary); font-size: 15px; }
+.thesis-app .central-notifications-header p { margin: 5px 0 0; color: var(--text-secondary); font-size: 10px; }
+.thesis-app .notification-filter-tabs {
+  display: flex;
+  gap: 5px;
+  padding: 0 20px 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+.thesis-app .notification-filter-tabs button {
+  min-height: 30px;
+  padding: 0 11px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  font: inherit;
+  font-size: 9px;
+  cursor: pointer;
+}
+.thesis-app .notification-filter-tabs button:hover,
+.thesis-app .notification-filter-tabs button.notification-filter-active {
+  color: #c8e4ff;
+  background: #193650;
+  border-color: #315b7c;
+}
+.thesis-app .central-notification-list { display: grid; }
+.thesis-app .central-notification {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 20px;
+  color: var(--text-primary);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+}
+.thesis-app .central-notification:last-child { border-bottom: 0; }
+.thesis-app .central-notification:hover,
+.thesis-app .central-notification-unread { background: rgb(36 77 115 / 23%); }
+.thesis-app .central-notification-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  color: #aad5fa;
+  background: #1d4263;
+  border-radius: 7px;
+}
+.thesis-app .central-notification-icon.central-notification-urgent { color: #ffb6b6; background: #492a35; }
+.thesis-app .central-notification-content { display: grid; flex: 1; min-width: 0; gap: 5px; }
+.thesis-app .central-notification-title,
+.thesis-app .central-notification-meta,
+.thesis-app .central-notification-status { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.thesis-app .central-notification-title { justify-content: space-between; }
+.thesis-app .central-notification-title > strong { color: var(--text-primary); font-size: 11px; }
+.thesis-app .notification-level {
+  padding: 3px 6px;
+  color: #bfdbf3;
+  background: #203f5e;
+  border-radius: 4px;
+  font-size: 8px;
+  font-weight: 600;
+}
+.thesis-app .central-notification-high .notification-level { color: #ffc3c3; background: #492a35; }
+.thesis-app .central-notification-meta { color: var(--text-secondary); font-size: 8px; }
+.thesis-app .central-notification-meta > span { display: inline-flex; align-items: center; gap: 4px; }
+.thesis-app .central-notification-detail { color: var(--text-secondary); font-size: 9px; }
+.thesis-app .central-notification-status { color: var(--text-secondary); font-size: 8px; }
+.thesis-app .central-notification-status > span { display: inline-flex; align-items: center; gap: 3px; }
+.thesis-app .central-notification-status > span:first-child svg { color: var(--pending-amber); }
+.thesis-app .notification-unread-label { color: #9fd1ff; font-size: 8px; white-space: nowrap; }
+.thesis-app .central-notifications-empty { padding: 30px 15px; }
+.thesis-app .central-notifications-note {
+  margin: 0;
+  padding: 11px 20px;
+  color: var(--text-secondary);
+  background: #10243b;
+  border-top: 1px solid var(--border-color);
+  font-size: 8px;
+}
+.thesis-app .notification-history-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 12px; }
 @media (max-width: 900px) {
   .thesis-app .monitoring-settings-grid { grid-template-columns: 1fr; }
 }
@@ -795,6 +905,14 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .thesis-app .dashboard-status-note { width: 100%; margin-left: 17px; }
 }
 @media (max-width: 520px) {
+  .thesis-app .central-notifications-header { align-items: flex-start; flex-direction: column; padding: 14px; }
+  .thesis-app .notification-filter-tabs { gap: 2px; overflow-x: auto; padding: 0 9px 10px; }
+  .thesis-app .notification-filter-tabs button { padding-inline: 8px; white-space: nowrap; }
+  .thesis-app .central-notification { gap: 8px; padding: 12px 10px; }
+  .thesis-app .central-notification-title { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .thesis-app .central-notification-status { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .thesis-app .central-notifications-note { padding: 10px; }
+  .thesis-app .notification-history-link { margin-left: 2px; }
   .thesis-app .dashboard-system-status { align-items: flex-start; flex-direction: column; }
   .thesis-app .dashboard-status-note { margin-left: 17px; }
   .thesis-app .dashboard-mode-summary { align-items: flex-start; flex-direction: column; }

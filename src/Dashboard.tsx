@@ -3,18 +3,18 @@ import { Activity, Bell, Camera, ChevronDown, ChevronRight, Cpu, FileClock, Layo
 import { EventDetailsModal } from './components/EventDetailsModal'
 import { NotificationCenter } from './components/NotificationCenter'
 import {
-  AlertsPage, DevicesPage, EventHistoryPage, GuestPassesPage, HouseholdPage, L2VerificationPage,
+  DevicesPage, EventHistoryPage, GuestPassesPage, HouseholdPage, L2VerificationPage,
   L4HighAlertPage, LiveViewPage, MonitoringModesPage, MotionEventsPage, NotificationSettingsPage,
   OverviewPage, PrivacySettingsPage, SystemSettingsPage, SystemStatusPage,
   type DemoFaceOutcome, type DemoRole, type DemoWorkflowState, type GuestPass,
 } from './components/ThesisPages'
 import { demoEvents, queryEvents, type EventFilters } from './services/eventService'
-import { notificationsFromEvents } from './services/notificationService'
+import { notificationsFromEvents, type DashboardNotification } from './services/notificationService'
 import { demoHouseholdMember, demoSystem } from './services/systemService'
 import type { SecurityEvent } from './models/securityEvent'
 import './App.css'
 
-type Page = 'Overview' | 'Alerts' | 'Event History' | 'System Status' | 'Devices' | 'Household Members' | 'Guest Passes' | 'L2 Verification' | 'L4 High Alert' | 'Notification Settings' | 'Privacy Settings' | 'System Settings' | 'Monitoring Modes' | 'Motion Events' | 'Live View'
+type Page = 'Overview' | 'Notifications & Alerts' | 'Event History' | 'System Status' | 'Devices' | 'Household Members' | 'Guest Passes' | 'Notification Settings' | 'Privacy Settings' | 'System Settings' | 'Monitoring Modes' | 'Motion Events' | 'Live View'
 interface NavigationItem {
   label: string
   page: Page
@@ -29,9 +29,7 @@ interface NavigationGroup {
 const groups: NavigationGroup[] = [
   { key: 'overview', title: 'Overview', icon: LayoutDashboard, items: [{ label: 'Dashboard', page: 'Overview', icon: LayoutDashboard }] },
   { key: 'alerts-events', title: 'Alerts & Events', icon: Bell, items: [
-    { label: 'Active Alerts', page: 'Alerts', icon: Bell },
-    { label: 'L2 Verification', page: 'L2 Verification', icon: Activity },
-    { label: 'L4 High Alert', page: 'L4 High Alert', icon: ShieldCheck },
+    { label: 'Notifications & Alerts', page: 'Notifications & Alerts', icon: Bell },
     { label: 'Event History', page: 'Event History', icon: FileClock },
   ] },
   { key: 'monitoring', title: 'Monitoring', icon: Activity, items: [
@@ -54,14 +52,12 @@ const groups: NavigationGroup[] = [
 const emptyFilters: EventFilters = { search: '', startDate: '', endDate: '', acousticClass: 'All', faceResult: 'All', decision: 'All' }
 const subtitles: Record<Page, string> = {
   Overview: 'Audio events, visual verification, and contextual response at a glance.',
-  Alerts: 'Review acoustic events that require attention or visual verification.',
+  'Notifications & Alerts': 'Review notifications, alert levels, simulated verification, and sample event status.',
   'Event History': 'Search and filter the recorded audio-triggered event history.',
   'System Status': 'Demo status for edge, audio, camera, and cloud subsystems.',
   Devices: 'Thesis prototype hardware and connected components.',
   'Household Members': 'Manage enrollment status without exposing biometric data.',
   'Guest Passes': 'Create temporary guest passes that expire after 1–7 days.',
-  'L2 Verification': 'Review a simulated unknown-person verification request.',
-  'L4 High Alert': 'Review the high-alert escalation state.',
   'Notification Settings': 'Configure channels for future system integration.',
   'Privacy Settings': 'Review the 15-day retention policy and recording access rules.',
   'System Settings': 'Prototype identity and data privacy information.',
@@ -80,7 +76,6 @@ export default function Dashboard() {
   const [selectedEvent, setSelectedEvent] = useState<SecurityEvent | null>(null)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['alerts-events'])
-  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [filters, setFilters] = useState(emptyFilters)
   const [query, setQuery] = useState('')
   const [notificationSettings, setNotificationSettings] = useState({ web: true, sms: true, physical: true })
@@ -96,10 +91,10 @@ export default function Dashboard() {
   const [motionTimestamp, setMotionTimestamp] = useState<string | null>(null)
   const [faceCheckRemaining, setFaceCheckRemaining] = useState(10)
   const [verificationRemaining, setVerificationRemaining] = useState(60)
+  const [motionNotificationId, setMotionNotificationId] = useState<string | null>(null)
   const [guestPasses, setGuestPasses] = useState<GuestPass[]>([])
   const guestPassSequence = useRef(0)
   const visibleEvents = useMemo(() => queryEvents(demoEvents, { ...filters, search: [filters.search, query].filter(Boolean).join(' ') }), [filters, query])
-  const reviewEvents = demoEvents.filter((event) => event.decision !== 'Log Only')
   const unread = notifications.filter((item) => !item.read).length
   const todayText = new Intl.DateTimeFormat('en', { weekday: 'long', month: 'long', day: 'numeric' }).format(new Date())
   const isAdministrator = demoRole === 'Administrator'
@@ -111,56 +106,84 @@ export default function Dashboard() {
         if (motionOutcome === 'unknown') {
           setWorkflowState('verification')
           setVerificationRemaining(60)
-          setPage('L2 Verification')
+          setPage('Notifications & Alerts')
+          updateNotification(motionNotificationId, { level: 'L2 · Verification', status: 'L2 verification required' })
         } else {
           setWorkflowState(motionOutcome === 'known' ? 'known-face' : 'no-face')
           setPage('Motion Events')
+          updateNotification(motionNotificationId, {
+            level: motionOutcome === 'known' ? 'L1 · Attention' : 'Event',
+            status: motionOutcome === 'known' ? 'Known face · logged as L1 Attention' : 'No face · time only, no image stored',
+          })
         }
       } else {
         setFaceCheckRemaining(faceCheckRemaining - 1)
       }
     }, 1000)
     return () => window.clearTimeout(timeout)
-  }, [workflowState, faceCheckRemaining, motionOutcome])
+  }, [workflowState, faceCheckRemaining, motionOutcome, motionNotificationId])
 
   useEffect(() => {
     if (workflowState !== 'verification') return
     const timeout = window.setTimeout(() => {
       if (verificationRemaining <= 1) {
         setWorkflowState('high-alert')
-        setPage('L4 High Alert')
+        setPage('Notifications & Alerts')
+        updateNotification(motionNotificationId, { level: 'L4 · High Alert', status: 'L2 timer expired · escalated to L4' })
       } else {
         setVerificationRemaining(verificationRemaining - 1)
       }
     }, 1000)
     return () => window.clearTimeout(timeout)
-  }, [workflowState, verificationRemaining])
+  }, [workflowState, verificationRemaining, motionNotificationId])
 
   function navigate(next: Page) {
     setPage(next)
     const activeGroup = navigationGroupForPage(next)
     if (activeGroup) setExpandedGroups((expanded) => expanded.includes(activeGroup) ? expanded : [...expanded, activeGroup])
     setMobileNavOpen(false)
-    setNotificationsOpen(false)
     setQuery('')
   }
 
-  function openEvent(id: string) {
-    setSelectedEvent(demoEvents.find((event) => event.id === id) ?? null)
-    setNotifications((items) => items.map((item) => item.eventId === id ? { ...item, read: true } : item))
-    setNotificationsOpen(false)
+  function updateNotification(id: string | null, changes: Partial<DashboardNotification>) {
+    if (!id) return
+    setNotifications((items) => items.map((item) => item.id === id ? { ...item, ...changes } : item))
+  }
+
+  function openNotification(notification: DashboardNotification) {
+    updateNotification(notification.id, { read: true })
+    if (notification.eventId) {
+      setSelectedEvent(demoEvents.find((event) => event.id === notification.eventId) ?? null)
+    }
   }
 
   const markAllRead = () => setNotifications((items) => items.map((item) => ({ ...item, read: true })))
 
   function simulateMotion(outcome: DemoFaceOutcome) {
     if (!advancedMode || !isAdministrator) return
+    const timestamp = new Date().toISOString()
+    const notificationId = `motion-${Date.now()}`
     setMotionOutcome(outcome)
-    setMotionTimestamp(new Date().toISOString())
+    setMotionTimestamp(timestamp)
+    setMotionNotificationId(notificationId)
+    setNotifications((items) => [{
+      id: notificationId,
+      eventId: null,
+      source: 'motion',
+      kind: 'MOTION',
+      level: 'Motion',
+      title: 'Motion detected',
+      detail: 'Simulated motion event · 10-second face check started',
+      timestamp,
+      read: false,
+      status: '10-second face check in progress',
+      acknowledgementStatus: 'Not available',
+      deliveryStatus: 'Simulation only · no device notification sent',
+    }, ...items])
     setFaceCheckRemaining(10)
     setVerificationRemaining(60)
     setWorkflowState('face-check')
-    setPage('Motion Events')
+    setPage('Notifications & Alerts')
   }
 
   function createGuestPass(guestName: string, durationDays: number) {
@@ -204,18 +227,27 @@ export default function Dashboard() {
     {mobileNavOpen && <button className="nav-scrim" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)} />}
     <main className="main-area">
       <header className="topbar"><button className="icon-button mobile-menu" aria-label="Open navigation" onClick={() => setMobileNavOpen(true)}><Menu size={20} /></button><div className="breadcrumb"><span>{homeName}</span><span className="breadcrumb-slash">/</span><strong>{groups.flatMap((group) => group.items).find((item) => item.page === page)?.label ?? page}</strong></div>
-        <div className="topbar-actions"><label className="search-box"><Search size={17} /><input aria-label="Search events" placeholder="Search events..." value={query} onChange={(event) => setQuery(event.target.value)} />{query && <button className="search-clear" aria-label="Clear search" onClick={() => setQuery('')}><X size={14} /></button>}</label><div className="notification-anchor"><button className="icon-button notification-button" aria-label={`Sample notifications, ${unread} unread`} aria-expanded={notificationsOpen} onClick={() => setNotificationsOpen((open) => !open)}><Bell size={19} />{unread > 0 && <span className="notification-dot" />}</button>{notificationsOpen && <NotificationCenter notifications={notifications} onOpen={openEvent} onMarkAllRead={markAllRead} />}</div><span className="topbar-divider" /><span className="today-label">{todayText}</span></div>
+        <div className="topbar-actions"><label className="search-box"><Search size={17} /><input aria-label="Search events" placeholder="Search events..." value={query} onChange={(event) => setQuery(event.target.value)} />{query && <button className="search-clear" aria-label="Clear search" onClick={() => setQuery('')}><X size={14} /></button>}</label><button className="icon-button notification-button" aria-label={`Notifications & Alerts, ${unread} unread`} onClick={() => navigate('Notifications & Alerts')}><Bell size={19} />{unread > 0 && <span className="notification-count">{unread > 99 ? '99+' : unread}</span>}</button><span className="topbar-divider" /><span className="today-label">{todayText}</span></div>
       </header>
-      <div className="page-content"><div className="page-heading"><div><p className="eyebrow">HAVEN HOME · SECURITY DASHBOARD</p><h1>{groups.flatMap((group) => group.items).find((item) => item.page === page)?.label ?? page}</h1><p className="page-subtitle">{subtitles[page]}</p></div>{(page === 'Overview' || page === 'Alerts') && <span className="demo-chip">DEMO DATA</span>}</div>
-        {page === 'Overview' && <OverviewPage events={demoEvents} alerts={reviewEvents} advancedMode={advancedMode} onOpenEvent={setSelectedEvent} onNavigate={navigate} />}
-        {page === 'Alerts' && <AlertsPage events={reviewEvents} onOpenEvent={setSelectedEvent} />}
+      <div className="page-content"><div className="page-heading"><div><p className="eyebrow">HAVEN HOME · SECURITY DASHBOARD</p><h1>{groups.flatMap((group) => group.items).find((item) => item.page === page)?.label ?? page}</h1><p className="page-subtitle">{subtitles[page]}</p></div>{(page === 'Overview' || page === 'Notifications & Alerts') && <span className="demo-chip">DEMO DATA</span>}</div>
+        {page === 'Overview' && <OverviewPage events={demoEvents} advancedMode={advancedMode} onOpenEvent={setSelectedEvent} onNavigate={navigate} />}
+        {page === 'Notifications & Alerts' && <>
+          {(workflowState === 'face-check' || workflowState === 'verification' || workflowState === 'safe') && <L2VerificationPage workflowState={workflowState} remainingSeconds={verificationRemaining} faceCheckRemaining={faceCheckRemaining} onSafe={() => {
+            setWorkflowState('safe')
+            updateNotification(motionNotificationId, { status: 'Marked Safe · demo response', acknowledgementStatus: 'Safe response · demo only' })
+          }} onNotSafe={() => {
+            setWorkflowState('high-alert')
+            updateNotification(motionNotificationId, { level: 'L4 · High Alert', status: 'Not Safe · escalated to L4', acknowledgementStatus: 'Not Safe response · demo only' })
+          }} onStartDemo={() => { setVerificationRemaining(60); setWorkflowState('verification') }} onCreateGuestPass={() => navigate('Guest Passes')} />}
+          {workflowState === 'high-alert' && <L4HighAlertPage active onReturn={() => navigate('Overview')} />}
+          <NotificationCenter notifications={notifications} onOpen={openNotification} onMarkAllRead={markAllRead} />
+          <button className="text-button notification-history-link" type="button" onClick={() => navigate('Event History')}>Open detailed event history <FileClock size={14} /></button>
+        </>}
         {page === 'Event History' && <EventHistoryPage events={visibleEvents} filters={filters} setFilters={setFilters} onOpenEvent={setSelectedEvent} />}
-        {page === 'L2 Verification' && <L2VerificationPage workflowState={workflowState} remainingSeconds={verificationRemaining} faceCheckRemaining={faceCheckRemaining} onSafe={() => setWorkflowState('safe')} onNotSafe={() => { setWorkflowState('high-alert'); setPage('L4 High Alert') }} onStartDemo={() => { setVerificationRemaining(60); setWorkflowState('verification') }} onCreateGuestPass={() => navigate('Guest Passes')} />}
-        {page === 'L4 High Alert' && <L4HighAlertPage active={workflowState === 'high-alert'} onReturn={() => navigate('Overview')} />}
         {page === 'System Status' && <SystemStatusPage />}
         {page === 'Devices' && <DevicesPage />}
         {page === 'Monitoring Modes' && <MonitoringModesPage demoRole={demoRole} onDemoRoleChange={setDemoRole} isAdministrator={isAdministrator} advancedMode={advancedMode} onAdvancedModeChange={setAdvancedMode} />}
-        {page === 'Motion Events' && <MotionEventsPage workflowState={workflowState} faceCheckRemaining={faceCheckRemaining} motionTimestamp={motionTimestamp} isAdministrator={isAdministrator} advancedMode={advancedMode} onSimulateMotion={simulateMotion} onOpenVerification={() => navigate('L2 Verification')} />}
+        {page === 'Motion Events' && <MotionEventsPage workflowState={workflowState} faceCheckRemaining={faceCheckRemaining} motionTimestamp={motionTimestamp} isAdministrator={isAdministrator} advancedMode={advancedMode} onSimulateMotion={simulateMotion} onOpenVerification={() => navigate('Notifications & Alerts')} />}
         {page === 'Live View' && <LiveViewPage />}
         {page === 'Household Members' && <HouseholdPage name={memberName} setName={setMemberName} recognitionEnabled={recognitionEnabled} setRecognitionEnabled={setRecognitionEnabled} enrollmentRequests={enrollmentRequests} onRequestEnrollment={(name) => setEnrollmentRequests((requests) => [...requests, { id: `HM-${String(requests.length + 2).padStart(3, '0')}`, name, createdAt: new Date().toISOString() }])} />}
         {page === 'Guest Passes' && <GuestPassesPage passes={guestPasses} onCreatePass={createGuestPass} onRevokePass={(id) => setGuestPasses((passes) => passes.filter((pass) => pass.id !== id))} />}
