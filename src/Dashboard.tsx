@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Activity, Bell, ChevronDown, Cpu, FileClock, LayoutDashboard, Menu, Search, Settings, ShieldCheck, Users, X, type LucideIcon } from 'lucide-react'
+import { Activity, Bell, Camera, ChevronDown, ChevronRight, Cpu, FileClock, LayoutDashboard, Menu, Search, Settings, ShieldCheck, Users, X, type LucideIcon } from 'lucide-react'
 import { EventDetailsModal } from './components/EventDetailsModal'
 import { NotificationCenter } from './components/NotificationCenter'
 import {
   AlertsPage, DevicesPage, EventHistoryPage, GuestPassesPage, HouseholdPage, L2VerificationPage,
-  L4HighAlertPage, NotificationSettingsPage, OverviewPage, PrivacySettingsPage, SystemSettingsPage,
-  SystemStatusPage, type DemoRole, type DemoWorkflowState, type GuestPass,
+  L4HighAlertPage, LiveViewPage, MonitoringModesPage, MotionEventsPage, NotificationSettingsPage,
+  OverviewPage, PrivacySettingsPage, SystemSettingsPage, SystemStatusPage,
+  type DemoFaceOutcome, type DemoRole, type DemoWorkflowState, type GuestPass,
 } from './components/ThesisPages'
 import { demoEvents, queryEvents, type EventFilters } from './services/eventService'
 import { notificationsFromEvents } from './services/notificationService'
@@ -13,12 +14,42 @@ import { demoHouseholdMember, demoSystem } from './services/systemService'
 import type { SecurityEvent } from './models/securityEvent'
 import './App.css'
 
-type Page = 'Overview' | 'Alerts' | 'Event History' | 'System Status' | 'Devices' | 'Household Members' | 'Guest Passes' | 'L2 Verification' | 'L4 High Alert' | 'Notification Settings' | 'Privacy Settings' | 'System Settings'
-const groups: { title: string; items: { label: Page; icon: LucideIcon }[] }[] = [
-  { title: 'HOME', items: [{ label: 'Overview', icon: LayoutDashboard }, { label: 'Alerts', icon: Bell }, { label: 'Event History', icon: FileClock }, { label: 'System Status', icon: Activity }] },
-  { title: 'MONITORING', items: [{ label: 'L2 Verification', icon: Bell }, { label: 'L4 High Alert', icon: ShieldCheck }] },
-  { title: 'SYSTEM', items: [{ label: 'Devices', icon: Cpu }, { label: 'Household Members', icon: Users }, { label: 'Guest Passes', icon: Users }] },
-  { title: 'SETTINGS', items: [{ label: 'Notification Settings', icon: Bell }, { label: 'Privacy Settings', icon: ShieldCheck }, { label: 'System Settings', icon: Settings }] },
+type Page = 'Overview' | 'Alerts' | 'Event History' | 'System Status' | 'Devices' | 'Household Members' | 'Guest Passes' | 'L2 Verification' | 'L4 High Alert' | 'Notification Settings' | 'Privacy Settings' | 'System Settings' | 'Monitoring Modes' | 'Motion Events' | 'Live View'
+interface NavigationItem {
+  label: string
+  page: Page
+  icon: LucideIcon
+}
+interface NavigationGroup {
+  key: string
+  title: string
+  icon: LucideIcon
+  items: NavigationItem[]
+}
+const groups: NavigationGroup[] = [
+  { key: 'overview', title: 'Overview', icon: LayoutDashboard, items: [{ label: 'Dashboard', page: 'Overview', icon: LayoutDashboard }] },
+  { key: 'alerts-events', title: 'Alerts & Events', icon: Bell, items: [
+    { label: 'Active Alerts', page: 'Alerts', icon: Bell },
+    { label: 'L2 Verification', page: 'L2 Verification', icon: Activity },
+    { label: 'L4 High Alert', page: 'L4 High Alert', icon: ShieldCheck },
+    { label: 'Event History', page: 'Event History', icon: FileClock },
+  ] },
+  { key: 'monitoring', title: 'Monitoring', icon: Activity, items: [
+    { label: 'Monitoring Modes', page: 'Monitoring Modes', icon: Settings },
+    { label: 'Motion Events', page: 'Motion Events', icon: Activity },
+  ] },
+  { key: 'camera-visitors', title: 'Camera & Visitors', icon: Camera, items: [
+    { label: 'Live View', page: 'Live View', icon: Camera },
+    { label: 'Household Members', page: 'Household Members', icon: Users },
+    { label: 'Guest Passes', page: 'Guest Passes', icon: Users },
+  ] },
+  { key: 'system-settings', title: 'System & Settings', icon: Cpu, items: [
+    { label: 'Device Status', page: 'Devices', icon: Cpu },
+    { label: 'System Status', page: 'System Status', icon: Activity },
+    { label: 'Notification Settings', page: 'Notification Settings', icon: Bell },
+    { label: 'Privacy Settings', page: 'Privacy Settings', icon: ShieldCheck },
+    { label: 'System Settings', page: 'System Settings', icon: Settings },
+  ] },
 ]
 const emptyFilters: EventFilters = { search: '', startDate: '', endDate: '', acousticClass: 'All', faceResult: 'All', decision: 'All' }
 const subtitles: Record<Page, string> = {
@@ -34,6 +65,13 @@ const subtitles: Record<Page, string> = {
   'Notification Settings': 'Configure channels for future system integration.',
   'Privacy Settings': 'Review the 15-day retention policy and recording access rules.',
   'System Settings': 'Prototype identity and data privacy information.',
+  'Monitoring Modes': 'Choose the household monitoring mode. Advanced mode remains off by default.',
+  'Motion Events': 'Preview the advanced motion-triggered workflow. Hardware is not connected.',
+  'Live View': 'Camera live view is unavailable in this prototype.',
+}
+
+function navigationGroupForPage(page: Page) {
+  return groups.find((group) => group.items.some((item) => item.page === page))?.key
 }
 
 export default function Dashboard() {
@@ -41,6 +79,7 @@ export default function Dashboard() {
   const [notifications, setNotifications] = useState(() => notificationsFromEvents(demoEvents))
   const [selectedEvent, setSelectedEvent] = useState<SecurityEvent | null>(null)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['alerts-events'])
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [filters, setFilters] = useState(emptyFilters)
   const [query, setQuery] = useState('')
@@ -53,6 +92,8 @@ export default function Dashboard() {
   const [demoRole, setDemoRole] = useState<DemoRole>('Administrator')
   const [advancedMode, setAdvancedMode] = useState(false)
   const [workflowState, setWorkflowState] = useState<DemoWorkflowState>('idle')
+  const [motionOutcome, setMotionOutcome] = useState<DemoFaceOutcome>('unknown')
+  const [motionTimestamp, setMotionTimestamp] = useState<string | null>(null)
   const [faceCheckRemaining, setFaceCheckRemaining] = useState(10)
   const [verificationRemaining, setVerificationRemaining] = useState(60)
   const [guestPasses, setGuestPasses] = useState<GuestPass[]>([])
@@ -60,7 +101,6 @@ export default function Dashboard() {
   const visibleEvents = useMemo(() => queryEvents(demoEvents, { ...filters, search: [filters.search, query].filter(Boolean).join(' ') }), [filters, query])
   const reviewEvents = demoEvents.filter((event) => event.decision !== 'Log Only')
   const unread = notifications.filter((item) => !item.read).length
-  const eventsToday = demoEvents.filter((event) => event.timestamp.slice(0, 10) === new Date().toISOString().slice(0, 10)).length
   const todayText = new Intl.DateTimeFormat('en', { weekday: 'long', month: 'long', day: 'numeric' }).format(new Date())
   const isAdministrator = demoRole === 'Administrator'
 
@@ -68,15 +108,20 @@ export default function Dashboard() {
     if (workflowState !== 'face-check') return
     const timeout = window.setTimeout(() => {
       if (faceCheckRemaining <= 1) {
-        setWorkflowState('verification')
-        setVerificationRemaining(60)
-        setPage('L2 Verification')
+        if (motionOutcome === 'unknown') {
+          setWorkflowState('verification')
+          setVerificationRemaining(60)
+          setPage('L2 Verification')
+        } else {
+          setWorkflowState(motionOutcome === 'known' ? 'known-face' : 'no-face')
+          setPage('Motion Events')
+        }
       } else {
         setFaceCheckRemaining(faceCheckRemaining - 1)
       }
     }, 1000)
     return () => window.clearTimeout(timeout)
-  }, [workflowState, faceCheckRemaining])
+  }, [workflowState, faceCheckRemaining, motionOutcome])
 
   useEffect(() => {
     if (workflowState !== 'verification') return
@@ -93,6 +138,8 @@ export default function Dashboard() {
 
   function navigate(next: Page) {
     setPage(next)
+    const activeGroup = navigationGroupForPage(next)
+    if (activeGroup) setExpandedGroups((expanded) => expanded.includes(activeGroup) ? expanded : [...expanded, activeGroup])
     setMobileNavOpen(false)
     setNotificationsOpen(false)
     setQuery('')
@@ -106,12 +153,14 @@ export default function Dashboard() {
 
   const markAllRead = () => setNotifications((items) => items.map((item) => ({ ...item, read: true })))
 
-  function simulateMotion() {
+  function simulateMotion(outcome: DemoFaceOutcome) {
     if (!advancedMode || !isAdministrator) return
+    setMotionOutcome(outcome)
+    setMotionTimestamp(new Date().toISOString())
     setFaceCheckRemaining(10)
     setVerificationRemaining(60)
     setWorkflowState('face-check')
-    setPage('Overview')
+    setPage('Motion Events')
   }
 
   function createGuestPass(guestName: string, durationDays: number) {
@@ -132,31 +181,50 @@ export default function Dashboard() {
     <aside className={`sidebar ${mobileNavOpen ? 'sidebar-open' : ''}`}>
       <button className="brand" onClick={() => navigate('Overview')}><span className="brand-mark"><ShieldCheck size={21} /></span><span className="brand-name">Haven<span>home</span></span></button>
       <div className="home-switcher"><span className="home-avatar">H</span><span className="home-copy"><strong>{homeName}</strong><small>Thesis prototype · Demo data</small></span><ChevronDown size={15} /></div>
-      {groups.map((group) => <div className="nav-group" key={group.title}><span className="nav-label">{group.title}</span><nav className="primary-nav" aria-label={group.title}>{group.items.map(({ label, icon: Icon }) => <button key={label} className={`nav-item ${page === label ? 'nav-item-active' : ''}`} onClick={() => navigate(label)}><Icon size={18} /><span>{label}</span>{label === 'Alerts' && <span className="nav-count">{reviewEvents.length}</span>}</button>)}</nav></div>)}
-      <div className="sidebar-spacer" /><div className="sidebar-protection"><span className="protection-icon"><ShieldCheck size={18} /></span><div><strong>Audio-first monitoring</strong><small>Face recognition on event</small></div><span className="status-dot" /></div>
+      {groups.map((group) => {
+        const GroupIcon = group.icon
+        const isExpanded = expandedGroups.includes(group.key)
+        const activeGroup = navigationGroupForPage(page) === group.key
+        if (group.items.length === 1) {
+          const item = group.items[0]
+          const ItemIcon = item.icon
+          return <div className="nav-group" key={group.key}><button className={`nav-item nav-group-single ${page === item.page ? 'nav-item-active' : ''}`} onClick={() => navigate(item.page)}><ItemIcon size={17} /><span>{item.label}</span></button></div>
+        }
+        return <div className="nav-group" key={group.key}>
+          <button className="nav-group-toggle" type="button" aria-expanded={isExpanded} aria-controls={`nav-${group.key}`} onClick={() => {
+            if (activeGroup) return
+            setExpandedGroups((expanded) => expanded.includes(group.key) ? expanded.filter((key) => key !== group.key) : [...expanded, group.key])
+          }}><GroupIcon size={15} /><span>{group.title}</span>{isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</button>
+          {isExpanded && <nav className="primary-nav" id={`nav-${group.key}`} aria-label={group.title}>{group.items.map(({ label, page: itemPage, icon: Icon }) => <button key={label} className={`nav-item ${page === itemPage ? 'nav-item-active' : ''}`} onClick={() => navigate(itemPage)}><Icon size={16} /><span>{label}</span></button>)}</nav>}
+        </div>
+      })}
+      <div className="sidebar-spacer" /><div className="sidebar-protection"><span className="protection-icon"><ShieldCheck size={18} /></span><div><strong>Prototype status</strong><small>Hardware not connected</small></div><span className="status-dot" /></div>
       <div className="profile-button"><span className="profile-avatar">{memberName.slice(0, 1).toUpperCase()}</span><span className="profile-copy"><strong>{memberName}</strong><small>Demo · {demoRole}</small></span><ChevronDown size={15} /></div>
     </aside>
     {mobileNavOpen && <button className="nav-scrim" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)} />}
     <main className="main-area">
-      <header className="topbar"><button className="icon-button mobile-menu" aria-label="Open navigation" onClick={() => setMobileNavOpen(true)}><Menu size={20} /></button><div className="breadcrumb"><span>{homeName}</span><span className="breadcrumb-slash">/</span><strong>{page}</strong></div>
-        <div className="topbar-actions"><label className="search-box"><Search size={17} /><input aria-label="Search events" placeholder="Search events..." value={query} onChange={(event) => setQuery(event.target.value)} />{query && <button className="search-clear" aria-label="Clear search" onClick={() => setQuery('')}><X size={14} /></button>}</label><div className="notification-anchor"><button className="icon-button notification-button" aria-label={`Notifications, ${unread} unread`} aria-expanded={notificationsOpen} onClick={() => setNotificationsOpen((open) => !open)}><Bell size={19} />{unread > 0 && <span className="notification-dot" />}</button>{notificationsOpen && <NotificationCenter notifications={notifications} onOpen={openEvent} onMarkAllRead={markAllRead} />}</div><span className="topbar-divider" /><span className="today-label">{todayText}</span></div>
+      <header className="topbar"><button className="icon-button mobile-menu" aria-label="Open navigation" onClick={() => setMobileNavOpen(true)}><Menu size={20} /></button><div className="breadcrumb"><span>{homeName}</span><span className="breadcrumb-slash">/</span><strong>{groups.flatMap((group) => group.items).find((item) => item.page === page)?.label ?? page}</strong></div>
+        <div className="topbar-actions"><label className="search-box"><Search size={17} /><input aria-label="Search events" placeholder="Search events..." value={query} onChange={(event) => setQuery(event.target.value)} />{query && <button className="search-clear" aria-label="Clear search" onClick={() => setQuery('')}><X size={14} /></button>}</label><div className="notification-anchor"><button className="icon-button notification-button" aria-label={`Sample notifications, ${unread} unread`} aria-expanded={notificationsOpen} onClick={() => setNotificationsOpen((open) => !open)}><Bell size={19} />{unread > 0 && <span className="notification-dot" />}</button>{notificationsOpen && <NotificationCenter notifications={notifications} onOpen={openEvent} onMarkAllRead={markAllRead} />}</div><span className="topbar-divider" /><span className="today-label">{todayText}</span></div>
       </header>
-      <div className="page-content"><div className="page-heading"><div><p className="eyebrow">HAVEN HOME · THESIS PROTOTYPE</p><h1>{page === 'Overview' ? 'Home monitoring' : page}</h1><p className="page-subtitle">{subtitles[page]}</p></div>{page === 'Overview' && <span className="demo-chip">DEMO DATA</span>}</div>
-        {page === 'Overview' && <OverviewPage events={demoEvents} alerts={unread} eventsToday={eventsToday} onOpenEvent={setSelectedEvent} onNavigate={navigate} demoRole={demoRole} onDemoRoleChange={setDemoRole} isAdministrator={isAdministrator} advancedMode={advancedMode} onAdvancedModeChange={setAdvancedMode} workflowState={workflowState} faceCheckRemaining={faceCheckRemaining} onSimulateMotion={simulateMotion} />}
+      <div className="page-content"><div className="page-heading"><div><p className="eyebrow">HAVEN HOME · SECURITY DASHBOARD</p><h1>{groups.flatMap((group) => group.items).find((item) => item.page === page)?.label ?? page}</h1><p className="page-subtitle">{subtitles[page]}</p></div>{(page === 'Overview' || page === 'Alerts') && <span className="demo-chip">DEMO DATA</span>}</div>
+        {page === 'Overview' && <OverviewPage events={demoEvents} alerts={reviewEvents} advancedMode={advancedMode} onOpenEvent={setSelectedEvent} onNavigate={navigate} />}
         {page === 'Alerts' && <AlertsPage events={reviewEvents} onOpenEvent={setSelectedEvent} />}
         {page === 'Event History' && <EventHistoryPage events={visibleEvents} filters={filters} setFilters={setFilters} onOpenEvent={setSelectedEvent} />}
-        {page === 'L2 Verification' && <L2VerificationPage workflowState={workflowState} remainingSeconds={verificationRemaining} faceCheckRemaining={faceCheckRemaining} onSafe={() => setWorkflowState('safe')} onNotSafe={() => { setWorkflowState('high-alert'); setPage('L4 High Alert') }} onStartDemo={() => { setVerificationRemaining(60); setWorkflowState('verification') }} />}
+        {page === 'L2 Verification' && <L2VerificationPage workflowState={workflowState} remainingSeconds={verificationRemaining} faceCheckRemaining={faceCheckRemaining} onSafe={() => setWorkflowState('safe')} onNotSafe={() => { setWorkflowState('high-alert'); setPage('L4 High Alert') }} onStartDemo={() => { setVerificationRemaining(60); setWorkflowState('verification') }} onCreateGuestPass={() => navigate('Guest Passes')} />}
         {page === 'L4 High Alert' && <L4HighAlertPage active={workflowState === 'high-alert'} onReturn={() => navigate('Overview')} />}
         {page === 'System Status' && <SystemStatusPage />}
         {page === 'Devices' && <DevicesPage />}
+        {page === 'Monitoring Modes' && <MonitoringModesPage demoRole={demoRole} onDemoRoleChange={setDemoRole} isAdministrator={isAdministrator} advancedMode={advancedMode} onAdvancedModeChange={setAdvancedMode} />}
+        {page === 'Motion Events' && <MotionEventsPage workflowState={workflowState} faceCheckRemaining={faceCheckRemaining} motionTimestamp={motionTimestamp} isAdministrator={isAdministrator} advancedMode={advancedMode} onSimulateMotion={simulateMotion} onOpenVerification={() => navigate('L2 Verification')} />}
+        {page === 'Live View' && <LiveViewPage />}
         {page === 'Household Members' && <HouseholdPage name={memberName} setName={setMemberName} recognitionEnabled={recognitionEnabled} setRecognitionEnabled={setRecognitionEnabled} enrollmentRequests={enrollmentRequests} onRequestEnrollment={(name) => setEnrollmentRequests((requests) => [...requests, { id: `HM-${String(requests.length + 2).padStart(3, '0')}`, name, createdAt: new Date().toISOString() }])} />}
         {page === 'Guest Passes' && <GuestPassesPage passes={guestPasses} onCreatePass={createGuestPass} onRevokePass={(id) => setGuestPasses((passes) => passes.filter((pass) => pass.id !== id))} />}
         {page === 'Notification Settings' && <NotificationSettingsPage settings={notificationSettings} setSettings={setNotificationSettings} />}
-        {page === 'Privacy Settings' && <PrivacySettingsPage isAdministrator={isAdministrator} />}
+        {page === 'Privacy Settings' && <PrivacySettingsPage />}
         {page === 'System Settings' && <SystemSettingsPage homeName={homeName} setHomeName={setHomeName} savedHomeName={savedHomeName} saveName={() => setSavedHomeName(homeName)} />}
         <footer className="page-footer"><span><span className="status-dot" /> Demo interface · no hardware connection</span><span>Sample event data <span className="footer-separator">·</span> Firebase not configured</span></footer>
       </div>
     </main>
-    {selectedEvent && <EventDetailsModal event={selectedEvent} canViewRecordings={isAdministrator} onClose={() => setSelectedEvent(null)} />}
+    {selectedEvent && <EventDetailsModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />}
   </div>
 }

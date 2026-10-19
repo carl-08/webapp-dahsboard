@@ -421,3 +421,388 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .guest-pass-status { margin-left: 44px; }
   .privacy-policy-banner { align-items: flex-start; flex-wrap: wrap; }
 }
+
+.thesis-app {
+  min-height: 100vh;
+  color: var(--text-primary);
+  background: var(--page-bg);
+  font-size: 13px;
+}
+.thesis-app,
+.thesis-app button,
+.thesis-app input,
+.thesis-app select { font-family: 'DM Sans', 'Segoe UI', sans-serif; }
+.thesis-app :focus-visible { outline: 2px solid #76b8ef; outline-offset: 2px; }
+.thesis-app .sidebar { width: 252px; gap: 0; overflow-x: hidden; color: var(--text-secondary); background: var(--sidebar-bg); border-right: 1px solid var(--border-color); }
+.thesis-app .brand { margin-bottom: 25px; }
+.thesis-app .brand-mark { color: #eaf4ff; background: var(--primary-blue); }
+.thesis-app .brand-name { font-size: 19px; }
+.thesis-app .brand-name span { color: var(--text-secondary); }
+.thesis-app .home-switcher { margin-bottom: 17px; background: #102741; border-color: var(--border-color); }
+.thesis-app .home-avatar { color: #eaf4ff; background: #28527a; }
+.thesis-app .home-copy strong,
+.thesis-app .profile-copy strong { color: var(--text-primary); }
+.thesis-app .home-copy small,
+.thesis-app .profile-copy small { color: var(--text-secondary); }
+.thesis-app .nav-group { margin: 0 0 7px; }
+.thesis-app .nav-label { color: #7895b0; }
+.thesis-app .nav-group-toggle { display: flex; width: 100%; height: 36px; align-items: center; gap: 9px; padding: 0 9px; color: #aac0d5; background: transparent; border: 0; border-radius: 6px; text-align: left; font-size: 11px; font-weight: 650; }
+.thesis-app .nav-group-toggle > span { flex: 1; }
+.thesis-app .nav-group-toggle:hover { color: var(--text-primary); background: rgb(255 255 255 / 4%); }
+.thesis-app .nav-group-single { margin-top: 0; }
+.thesis-app .primary-nav { gap: 2px; margin: 3px 0 0; padding-left: 9px; border-left: 1px solid #29445f; margin-left: 16px; }
+.thesis-app .nav-item { height: 34px; gap: 9px; padding: 0 9px; color: #a8bdd2; border-radius: 5px; font-size: 11px; }
+.thesis-app .nav-item:hover { color: var(--text-primary); background: #17324e; }
+.thesis-app .nav-item-active,
+.thesis-app .nav-item-active:hover { color: #f4f8ff; background: var(--selected-blue); }
+.thesis-app .nav-item-active > svg { color: #82bdf0; }
+.thesis-app .nav-count { width: 19px; height: 19px; color: #fff; background: #a9434d; border-radius: 50%; font-size: 9px; }
+.thesis-app .sidebar-protection { border-color: var(--border-color); }
+.thesis-app .protection-icon { color: #a6d5ff; background: rgb(59 130 196 / 17%); }
+.thesis-app .sidebar-protection strong { color: var(--text-primary); }
+.thesis-app .sidebar-protection small { color: var(--text-secondary); }
+.thesis-app .status-dot { background: var(--pending-amber); box-shadow: 0 0 0 3px rgb(229 183 94 / 12%); }
+.thesis-app .profile-button { border-color: var(--border-color); }
+.thesis-app .profile-avatar { color: #f1f6fc; background: #28527a; }
+.thesis-app .main-area { min-height: 100vh; background: var(--page-bg); }
+.thesis-app .topbar { color: var(--text-secondary); background: rgb(11 22 40 / 96%); border-color: var(--border-color); backdrop-filter: blur(12px); }
+.thesis-app .breadcrumb { color: var(--text-secondary); }
+.thesis-app .breadcrumb strong { color: var(--text-primary); }
+.thesis-app .breadcrumb-slash,
+.thesis-app .topbar-divider { color: #58738e; background: var(--border-color); }
+.thesis-app .today-label { color: var(--text-secondary); }
+.thesis-app .search-box { color: #8eabc6; background: #10243b; border-color: var(--border-color); }
+.thesis-app .search-box input { color: var(--text-primary); }
+.thesis-app .search-box input::placeholder { color: #829ab2; }
+.thesis-app .search-box kbd { color: var(--text-secondary); background: var(--card-bg); border-color: var(--border-color); }
+.thesis-app .icon-button { color: #b4c8db; }
+.thesis-app .icon-button:hover { color: #fff; background: #193650; }
+.thesis-app .notification-dot { border-color: var(--sidebar-bg); }
+.thesis-app .notification-popover { background: var(--card-bg); border-color: var(--border-color); box-shadow: 0 16px 40px rgb(0 0 0 / 35%); }
+.thesis-app .notification-popover-head,
+.thesis-app .notification-item { background: var(--card-bg); border-color: var(--border-color); }
+.thesis-app .notification-popover-head strong,
+.thesis-app .notification-copy b { color: var(--text-primary); }
+.thesis-app .notification-popover-head small,
+.thesis-app .notification-copy small { color: var(--text-secondary); }
+.thesis-app .notification-item:hover,
+.thesis-app .notification-unread { background: #193650; }
+.thesis-app .notification-mark { color: #9bcaf2; background: #203f5e; }
+.thesis-app .notification-copy strong { color: #b8d8f4; }
+.thesis-app .page-content { padding-top: 29px; }
+.thesis-app .eyebrow { color: #83a2bf; letter-spacing: .07em; }
+.thesis-app h1,
+.thesis-app h2,
+.thesis-app h3 { color: var(--text-primary); }
+.thesis-app h1 { font-size: 25px; }
+.thesis-app .page-subtitle { color: var(--text-secondary); font-size: 12px; }
+.thesis-app .panel,
+.thesis-app .stat-card,
+.thesis-app .device-card,
+.thesis-app .device-host-card { color: var(--text-primary); background: var(--card-bg); border-color: var(--border-color); border-radius: 9px; }
+.thesis-app .panel-heading { border-color: var(--border-color); }
+.thesis-app .panel-heading h2 { color: var(--text-primary); font-size: 13px; }
+.thesis-app .panel-heading p { color: var(--text-secondary); font-size: 10px; }
+.thesis-app .demo-chip { color: #a9d2f5; background: #1b3855; border: 1px solid #315779; }
+.thesis-app .text-button { color: #8fc5f1; font-size: 10px; }
+.thesis-app .text-button:hover { color: #d9edff; }
+.thesis-app .secondary-button { color: #dcecff; background: #193650; border-color: #345875; font-size: 10px; }
+.thesis-app .secondary-button:hover { background: #244d73; }
+.thesis-app .primary-button { color: #fff; background: var(--primary-blue); border-color: var(--primary-blue); font-size: 10px; }
+.thesis-app .primary-button:hover:not(:disabled) { background: #2e6fae; }
+.thesis-app .field-label,
+.thesis-app .history-filter span { color: var(--text-secondary); }
+.thesis-app .field-label input,
+.thesis-app .field-label select,
+.thesis-app .history-search,
+.thesis-app .history-filter,
+.thesis-app .demo-role-control select,
+.thesis-app .guest-pass-form input,
+.thesis-app .guest-pass-form select,
+.thesis-app .filter-select { color: var(--text-primary); background: #10243b; border-color: var(--border-color); }
+.thesis-app .history-search input,
+.thesis-app .history-filter select,
+.thesis-app .history-filter input,
+.thesis-app .filter-select select { color: var(--text-primary); }
+.thesis-app select option { color: var(--text-primary); background: var(--card-bg); }
+.thesis-app .status-strip,
+.thesis-app .status-callout { color: var(--text-primary); background: var(--card-bg); border-color: var(--border-color); }
+.thesis-app .status-intro strong,
+.thesis-app .status-callout strong { color: var(--text-primary); }
+.thesis-app .status-intro span:not(.status-emblem),
+.thesis-app .status-callout p { color: var(--text-secondary); }
+.thesis-app .status-emblem { color: #b7dcfb; background: #1d4263; }
+.thesis-app .status-metric strong { color: var(--text-primary); }
+.thesis-app .status-metric small { color: var(--text-secondary); }
+.thesis-app .metric-icon.green,
+.thesis-app .metric-icon.blue { color: #a8d4fa; background: #1d4263; }
+.thesis-app .metric-icon.amber { color: var(--pending-amber); background: #423923; }
+.thesis-app .event-table th { color: #92abc2; background: #10243b; }
+.thesis-app .event-table td { color: var(--text-secondary); border-color: var(--border-color); }
+.thesis-app .event-table th,
+.thesis-app .history-filters { border-color: var(--border-color); }
+.thesis-app .event-table-row:hover,
+.thesis-app .event-table-row:focus-visible { background: #193650; }
+.thesis-app .thesis-event-table td:first-child strong,
+.thesis-app .event-description strong { color: var(--text-primary); }
+.thesis-app .thesis-event-table td:first-child small,
+.thesis-app .event-description small { color: var(--text-secondary); }
+.thesis-app .decision-badge,
+.thesis-app .acoustic-badge { background: #203c58; border-color: #345471; }
+.thesis-app .decision-badge.attention { color: #f0ce81; background: #403923; border-color: #665a36; }
+.thesis-app .decision-badge.verification,
+.thesis-app .decision-badge.higher-verification { color: #f0ce81; background: #403923; border-color: #665a36; }
+.thesis-app .decision-badge.alert,
+.thesis-app .decision-badge.higher-alert { color: #ffb4b4; background: #492a35; border-color: #76404b; }
+.thesis-app .acoustic-normal { color: #bfd0df; }
+.thesis-app .acoustic-crying { color: #a8d5f7; }
+.thesis-app .acoustic-scream { color: #ffb4b4; }
+.thesis-app .acoustic-shouting { color: #f0ce81; }
+.thesis-app .acoustic-impact { color: #d1b7f1; }
+.thesis-app .response-status,
+.thesis-app .device-status,
+.thesis-app .system-state { color: #9fc9e9; }
+.thesis-app .system-card,
+.thesis-app .pipeline-block,
+.thesis-app .settings-note,
+.thesis-app .privacy-info,
+.thesis-app .privacy-policy-banner,
+.thesis-app .privacy-policy-card,
+.thesis-app .privacy-enforcement-note,
+.thesis-app .enrollment-notice,
+.thesis-app .privacy-callout,
+.thesis-app .verification-context,
+.thesis-app .verification-prompt,
+.thesis-app .verification-empty,
+.thesis-app .high-alert-card,
+.thesis-app .motion-control-note { background: var(--card-bg); border-color: var(--border-color); }
+.thesis-app .system-name-row h2,
+.thesis-app .system-details > div strong,
+.thesis-app .pipeline-block strong,
+.thesis-app .member-main h3,
+.thesis-app .member-name-input,
+.thesis-app .guest-pass-info strong,
+.thesis-app .privacy-policy-banner strong,
+.thesis-app .retention-value,
+.thesis-app .high-alert-facts strong { color: var(--text-primary); }
+.thesis-app .system-eyebrow,
+.thesis-app .system-details > div span,
+.thesis-app .system-note,
+.thesis-app .pipeline-block small,
+.thesis-app .member-main > p,
+.thesis-app .guest-pass-info span,
+.thesis-app .privacy-policy-banner p,
+.thesis-app .privacy-policy-card p,
+.thesis-app .privacy-enforcement-note p,
+.thesis-app .high-alert-card > p:not(.prototype-disclaimer) { color: var(--text-secondary); }
+.thesis-app .system-details > div,
+.thesis-app .detail-section,
+.thesis-app .system-setting-form,
+.thesis-app .toggle-row,
+.thesis-app .guest-pass-row,
+.thesis-app .detail-section { border-color: var(--border-color); }
+.thesis-app .thesis-alert-card { border-bottom-color: var(--border-color); }
+.thesis-app .thesis-alert-main h3,
+.thesis-app .alert-facts b { color: var(--text-primary); }
+.thesis-app .alert-facts,
+.thesis-app .alert-card-time { color: var(--text-secondary); }
+.thesis-app .thesis-alert-icon { color: #f3a4a0; background: #492a35; }
+.thesis-app .alert-tone-attention { border-left-color: var(--pending-amber); }
+.thesis-app .alert-tone-verification,
+.thesis-app .alert-tone-higher-level-verification { border-left-color: var(--primary-blue); }
+.thesis-app .alert-tone-alert,
+.thesis-app .alert-tone-higher-level-alert { border-left-color: var(--alert-red); }
+.thesis-app .response-chip { color: #bed0e0; background: #203c58; }
+.thesis-app .response-chip-on { color: #a9dfbf; background: #1b453d; }
+.thesis-app .member-avatar,
+.thesis-app .member-enrolled,
+.thesis-app .member-enabled,
+.thesis-app .device-card-icon,
+.thesis-app .system-icon,
+.thesis-app .privacy-policy-icon,
+.thesis-app .guest-pass-avatar { color: #a8d4fa; background: #1d4263; }
+.thesis-app .member-disabled,
+.thesis-app .policy-status { color: #f0ce81; background: #403923; }
+.thesis-app .member-pending { color: #f0ce81; background: #403923; }
+.thesis-app .device-kind,
+.thesis-app .device-card > p,
+.thesis-app .device-host-card p,
+.thesis-app .page-inline-note,
+.thesis-app .save-status,
+.thesis-app .snapshot-caption,
+.thesis-app .snapshot-heading p,
+.thesis-app .detail-item > span,
+.thesis-app .section-note { color: var(--text-secondary); }
+.thesis-app .device-card h3,
+.thesis-app .device-host-card h2,
+.thesis-app .detail-item > strong,
+.thesis-app .snapshot-heading h3 { color: var(--text-primary); }
+.thesis-app .toggle-row strong,
+.thesis-app .settings-note h3,
+.thesis-app .privacy-info h3 { color: var(--text-primary); }
+.thesis-app .toggle-row p,
+.thesis-app .settings-note p,
+.thesis-app .privacy-info p { color: var(--text-secondary); }
+.thesis-app .status-led { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; }
+.thesis-app .status-led-muted { background: #71869a; }
+.thesis-app .status-led-blue { background: var(--primary-blue); }
+.thesis-app .dashboard-system-status { display: flex; align-items: center; gap: 28px; padding: 14px 17px; margin-bottom: 13px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 9px; }
+.thesis-app .dashboard-status-item { display: flex; align-items: center; gap: 9px; }
+.thesis-app .dashboard-status-item > div { display: grid; gap: 2px; }
+.thesis-app .dashboard-status-item strong { color: var(--text-primary); font-size: 11px; }
+.thesis-app .dashboard-status-item span:not(.status-led) { color: var(--text-secondary); font-size: 10px; }
+.thesis-app .dashboard-status-note { margin-left: auto; color: var(--text-secondary); font-size: 10px; }
+.thesis-app .dashboard-mode-summary { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 17px; margin-bottom: 13px; }
+.thesis-app .dashboard-mode-summary h2 { display: flex; align-items: center; gap: 9px; margin: 0 0 5px; font: 700 15px/1.3 Manrope,sans-serif; }
+.thesis-app .dashboard-mode-summary p { margin: 0; color: var(--text-secondary); font-size: 10px; }
+.thesis-app .mode-kicker { color: #89a9c4; }
+.thesis-app .mode-state-active { color: #a9dfbf; background: #1b453d; }
+.thesis-app .mode-state-off { color: #e9c77b; background: #403923; }
+.thesis-app .dashboard-list-panel { margin-bottom: 13px; }
+.thesis-app .dashboard-alert-row,
+.thesis-app .dashboard-event-row { display: flex; width: 100%; min-height: 54px; align-items: center; gap: 12px; padding: 9px 16px; color: var(--text-primary); background: transparent; border: 0; border-bottom: 1px solid var(--border-color); text-align: left; }
+.thesis-app .dashboard-alert-row:last-child,
+.thesis-app .dashboard-event-row:last-child { border-bottom: 0; }
+.thesis-app .dashboard-alert-row:hover,
+.thesis-app .dashboard-event-row:hover { background: #193650; }
+.thesis-app .dashboard-alert-level { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; color: #e7c46e; background: #403923; border-radius: 7px; }
+.thesis-app .dashboard-alert-urgent { color: #ffb4b4; background: #492a35; }
+.thesis-app .dashboard-list-main { display: grid; flex: 1; min-width: 0; gap: 3px; }
+.thesis-app .dashboard-list-main strong { overflow: hidden; color: var(--text-primary); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.thesis-app .dashboard-list-main small,
+.thesis-app .dashboard-event-time { color: var(--text-secondary); font-size: 9px; }
+.thesis-app .dashboard-event-time { display: grid; width: 85px; flex: 0 0 85px; gap: 3px; }
+.thesis-app .dashboard-empty { padding: 18px; color: var(--text-secondary); font-size: 10px; }
+.thesis-app .monitoring-settings-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(220px, .7fr); align-items: start; gap: 14px; }
+.thesis-app .monitoring-mode-panel .panel-heading { margin-bottom: 3px; }
+.thesis-app .monitoring-mode-option { display: flex; align-items: center; gap: 11px; padding: 14px 17px; border-bottom: 1px solid var(--border-color); }
+.thesis-app .monitoring-option-icon { display: grid; width: 34px; height: 34px; flex: 0 0 34px; place-items: center; color: #a8d4fa; background: #1d4263; border-radius: 8px; }
+.thesis-app .monitoring-option-copy { display: grid; flex: 1; gap: 4px; }
+.thesis-app .monitoring-option-copy strong { color: var(--text-primary); font-size: 11px; }
+.thesis-app .monitoring-option-copy span { color: var(--text-secondary); font-size: 9px; }
+.thesis-app .mode-controls { padding: 14px 17px; border-color: var(--border-color); }
+.thesis-app .demo-role-control { color: var(--text-secondary); }
+.thesis-app .mode-toggle-control { color: var(--text-secondary); }
+.thesis-app .toggle-switch { background: #52677c; }
+.thesis-app .toggle-switch.toggle-on { background: var(--primary-blue); }
+.thesis-app .monitoring-control-note { padding: 17px; color: var(--text-secondary); background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 9px; }
+.thesis-app .monitoring-control-note > svg { color: #a8d4fa; }
+.thesis-app .monitoring-control-note h2 { margin: 10px 0 6px; font: 700 13px Manrope,sans-serif; }
+.thesis-app .monitoring-control-note p { margin: 0 0 12px; color: var(--text-secondary); font-size: 10px; line-height: 1.6; }
+.thesis-app .prototype-note { display: flex; align-items: flex-start; gap: 8px; padding: 12px 15px; color: #9fc7e7; background: #10243b; border-top: 1px solid var(--border-color); }
+.thesis-app .prototype-note svg { flex: 0 0 auto; margin-top: 1px; }
+.thesis-app .prototype-note p { margin: 0; color: var(--text-secondary); font-size: 9px; line-height: 1.55; }
+.thesis-app .motion-events-panel { padding-bottom: 14px; }
+.thesis-app .motion-notification { color: #f0ce81; background: #403923; border-color: #665a36; }
+.thesis-app .motion-notification strong { color: #ffe6a8; }
+.thesis-app .motion-event-state { display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 12px 17px; color: var(--text-primary); }
+.thesis-app .motion-event-state strong { font-size: 11px; }
+.thesis-app .workflow-status-complete { background: var(--safe-green); box-shadow: 0 0 0 3px rgb(97 189 139 / 12%); }
+.thesis-app .workflow-status-alert { background: var(--alert-red); box-shadow: 0 0 0 3px rgb(231 120 120 / 15%); }
+.thesis-app .motion-outcome-picker { padding: 13px 17px 16px; margin: 0 17px 14px; border: 1px solid var(--border-color); border-radius: 7px; }
+.thesis-app .motion-outcome-picker legend { padding: 0 6px; color: var(--text-secondary); font-size: 9px; }
+.thesis-app .motion-outcome-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.thesis-app .motion-outcome-picker:disabled { opacity: .55; }
+.thesis-app .workflow-hint { padding: 0 17px; color: var(--pending-amber); font-size: 9px; }
+.thesis-app .unavailable-feature-panel { display: grid; justify-items: start; gap: 11px; padding: 22px; }
+.thesis-app .unavailable-feature-icon { display: grid; width: 42px; height: 42px; place-items: center; color: #a8d4fa; background: #1d4263; border-radius: 9px; }
+.thesis-app .unavailable-feature-panel h2 { margin: 0; font: 700 16px Manrope,sans-serif; }
+.thesis-app .unavailable-feature-panel > p { margin: 0; color: var(--text-secondary); font-size: 10px; }
+.thesis-app .unavailable-feature-panel .prototype-note { align-self: stretch; margin-top: 5px; border: 1px solid var(--border-color); border-radius: 6px; }
+.thesis-app .verification-level { color: #f0ce81; }
+.thesis-app .verification-timer { color: #e5c87f; border-color: var(--border-color); }
+.thesis-app .verification-timer strong { color: #ffe3a2; }
+.thesis-app .verification-symbol { color: #e5c87f; background: #403923; }
+.thesis-app .verification-content h2,
+.thesis-app .verification-empty h2 { color: var(--text-primary); }
+.thesis-app .verification-content p,
+.thesis-app .verification-empty p,
+.thesis-app .verification-context { color: var(--text-secondary); }
+.thesis-app .verification-context { background: #102d3b; }
+.thesis-app .safe-action { color: #a9dfbf; background: #1b453d; border-color: #326a57 !important; }
+.thesis-app .safe-action:hover { background: #245b49; }
+.thesis-app .unsafe-action { color: #ffb4b4; background: #492a35; border-color: #76404b !important; }
+.thesis-app .unsafe-action:hover { background: #60333f; }
+.thesis-app .verification-safe-result { background: #142f35; border-color: #326a57; }
+.thesis-app .verification-safe-result .verification-symbol { color: #a9dfbf; background: #1b453d; }
+.thesis-app .high-alert-screen .high-alert-level,
+.thesis-app .high-alert-kicker { color: #ffaaaa; }
+.thesis-app .high-alert-card { background: #2b202d; border-color: #76404b; }
+.thesis-app .high-alert-symbol { color: #ffb4b4; background: #492a35; }
+.thesis-app .high-alert-facts { border-color: var(--border-color); }
+.thesis-app .high-alert-facts span { color: var(--text-secondary); }
+.thesis-app .high-alert-facts strong { color: var(--text-primary); }
+.thesis-app .verification-empty .workflow-icon { color: #a8d4fa; background: #1d4263; }
+.thesis-app .face-check-progress { background: #29445f; }
+.thesis-app .face-check-progress span { background: var(--primary-blue); }
+.thesis-app .guest-pass-info strong,
+.thesis-app .guest-pass-empty strong { color: var(--text-primary); }
+.thesis-app .guest-pass-info span,
+.thesis-app .guest-pass-empty span { color: var(--text-secondary); }
+.thesis-app .guest-pass-empty { color: var(--text-secondary); }
+.thesis-app .privacy-policy-banner { color: #a8d4fa; }
+.thesis-app .privacy-policy-icon { color: #a8d4fa; background: #1d4263; }
+.thesis-app .retention-value { color: var(--text-primary); }
+.thesis-app .privacy-enforcement-note { color: #e5c87f; background: #302b20; }
+.thesis-app .privacy-enforcement-note p { color: var(--text-secondary); }
+.thesis-app .enrollment-notice { color: #a8d4fa; }
+.thesis-app .enrollment-notice strong { color: var(--text-primary); }
+.thesis-app .enrollment-notice p { color: var(--text-secondary); }
+.thesis-app .privacy-callout { color: #a8d4fa; background: #102d3b; }
+.thesis-app .privacy-callout p { color: var(--text-secondary); }
+.thesis-app .enrollment-consent { color: var(--text-secondary); }
+.thesis-app .enrollment-steps { color: var(--text-secondary); border-color: var(--border-color); }
+.thesis-app .enrollment-steps .enrollment-step-current { color: #a9dfbf; }
+.thesis-app .response-check { background: #52677c; }
+.thesis-app .response-done { background: #438463; }
+.thesis-app .response-triggered { color: #a9dfbf; }
+.thesis-app .response-not-triggered { color: var(--text-secondary); }
+.thesis-app .processing-grid,
+.thesis-app .response-grid { color: var(--text-primary); }
+.thesis-app .response-state { background: #10243b; border-color: var(--border-color); }
+.thesis-app .response-state > span:nth-child(2) { color: var(--text-primary); }
+.thesis-app .sample-label { color: var(--text-secondary); }
+.thesis-app .snapshot-tag { color: #a8d4fa; }
+.thesis-app .snapshot-unavailable { color: var(--text-secondary); background: #10243b; }
+.thesis-app .page-footer { color: var(--text-secondary); border-color: var(--border-color); }
+.thesis-app .page-footer .status-dot { background: var(--pending-amber); }
+.thesis-app .notification-copy strong { color: #b8d8f4; }
+.thesis-app .empty-state strong { color: var(--text-primary); }
+.thesis-app .empty-state p { color: var(--text-secondary); }
+.thesis-app .empty-state > span { color: #a8d4fa; background: #1d4263; }
+.thesis-app .arm-button { color: #a9dfbf; background: #1b453d; border-color: #326a57; }
+.thesis-app .arm-button.is-disarmed { color: #f0ce81; background: #403923; border-color: #665a36; }
+.thesis-app .status-state,
+.thesis-app .device-online { color: var(--text-secondary); }
+.thesis-app .status-state i { background: var(--safe-green); }
+.thesis-app .modal-backdrop { background: rgb(2 8 16 / 78%); }
+.thesis-app .event-modal { color: var(--text-primary); background: var(--card-bg); border-color: var(--border-color); }
+.thesis-app .modal-header { background: var(--card-bg); border-color: var(--border-color); }
+.thesis-app .modal-kicker,
+.thesis-app .modal-header p { color: var(--text-secondary); }
+.thesis-app .modal-header h2,
+.thesis-app .detail-section > h3 { color: var(--text-primary); }
+.thesis-app .snapshot-image { border-color: var(--border-color); }
+.thesis-app .decision-detail > span { color: var(--text-secondary); }
+.thesis-app .sample-label { color: var(--pending-amber); }
+.thesis-app .nav-scrim { background: rgb(1 7 15 / 68%); }
+@media (max-width: 900px) {
+  .thesis-app .monitoring-settings-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 780px) {
+  .thesis-app .sidebar { width: 270px; }
+  .thesis-app .dashboard-system-status { flex-wrap: wrap; gap: 12px 22px; }
+  .thesis-app .dashboard-status-note { width: 100%; margin-left: 17px; }
+}
+@media (max-width: 520px) {
+  .thesis-app .dashboard-system-status { align-items: flex-start; flex-direction: column; }
+  .thesis-app .dashboard-status-note { margin-left: 17px; }
+  .thesis-app .dashboard-mode-summary { align-items: flex-start; flex-direction: column; }
+  .thesis-app .dashboard-mode-summary h2 { font-size: 13px; }
+  .thesis-app .monitoring-mode-option { flex-wrap: wrap; padding-inline: 12px; }
+  .thesis-app .monitoring-option-copy { min-width: calc(100% - 55px); }
+  .thesis-app .monitoring-mode-option > .mode-state { margin-left: 45px; }
+  .thesis-app .motion-outcome-actions { display: grid; grid-template-columns: 1fr; }
+  .thesis-app .dashboard-event-row { gap: 8px; }
+  .thesis-app .dashboard-event-time { width: 68px; flex-basis: 68px; }
+}
