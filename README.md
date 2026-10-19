@@ -15,7 +15,9 @@ Frontend prototype for **Context-Aware Household Alert System Using Audio-Trigge
 
 ## Integration status
 
-This repository does not connect to household hardware or backend services. Authentication, authorization, component health checks, network probing, startup/shutdown and access audit logs, motion sensing, camera capture, facial recognition, persistent guest passes, automatic media deletion, recording access logs, SMS, physical alarms, and live telemetry are not implemented. The timed workflows demonstrate UI behavior only; secure access restrictions require backend enforcement.
+The `backend/` directory now contains a local-only FastAPI and SQLite foundation for device records, component-health reports, event records, and monitoring-mode configuration. It does not connect the dashboard to the API or connect to household hardware. The frontend continues to use demo data. Authentication, authorization, actual component-health probes, network probing, startup/shutdown and access audit logs, motion sensing, camera capture, facial recognition, persistent guest passes, automatic media deletion, recording access logs, SMS, physical alarms, and live telemetry are not implemented. The timed workflows demonstrate UI behavior only; secure access restrictions require backend enforcement.
+
+Backend setup, API endpoints, and security limitations are documented in [backend/README.md](./backend/README.md). The API rejects non-loopback bind addresses and must not be exposed remotely before authentication and secure device access are implemented.
 
 ## Development
 
