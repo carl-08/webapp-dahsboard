@@ -896,7 +896,51 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   font-size: 8px;
 }
 .thesis-app .notification-history-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 12px; }
+.thesis-app .system-health-page { display: grid; gap: 14px; }
+.thesis-app .system-health-overall {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 20px;
+  background: #172b3c;
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--pending-amber);
+  border-radius: 8px;
+}
+.thesis-app .system-health-overall h2 { margin: 4px 0; color: var(--text-primary); font-size: 17px; }
+.thesis-app .system-health-overall p { margin: 0; color: var(--text-secondary); font-size: 9px; }
+.thesis-app .system-health-label { color: var(--text-secondary); font-size: 8px; font-weight: 700; letter-spacing: .08em; }
+.thesis-app .system-health-overall.system-health-offline { border-left-color: var(--alert-red); }
+.thesis-app .system-health-overall.system-health-degraded { border-left-color: var(--pending-amber); }
+.thesis-app .system-health-overall.system-health-all-systems-online { border-left-color: var(--safe-green); }
+.thesis-app .system-health-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.thesis-app .system-health-card { padding: 15px; }
+.thesis-app .system-health-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.thesis-app .system-health-icon { display: grid; width: 30px; height: 30px; place-items: center; color: #a8d4fa; background: #1d4263; border-radius: 6px; }
+.thesis-app .system-health-state { padding: 4px 7px; color: #f0ce81; background: #403923; border-radius: 4px; font-size: 8px; font-weight: 600; }
+.thesis-app .system-health-state-unknown { color: #c8d5e0; background: #293a4a; }
+.thesis-app .system-health-state-offline { color: #ffc3c3; background: #492a35; }
+.thesis-app .system-health-state-degraded { color: #f0ce81; background: #403923; }
+.thesis-app .system-health-state-online { color: #a9dfbf; background: #1b453d; }
+.thesis-app .system-health-card h3 { margin: 11px 0 5px; color: var(--text-primary); font-size: 10px; }
+.thesis-app .system-health-card p { margin: 0; color: var(--text-secondary); font-size: 8px; line-height: 1.55; }
+.thesis-app .system-health-note,
+.thesis-app .system-activity-disclaimer { display: flex; align-items: flex-start; gap: 7px; margin: 0; padding: 11px 13px; color: var(--text-secondary); background: #10243b; border: 1px solid var(--border-color); border-radius: 6px; font-size: 8px; line-height: 1.6; }
+.thesis-app .system-health-note svg,
+.thesis-app .system-activity-disclaimer svg { flex: 0 0 auto; color: #a8d4fa; }
+.thesis-app .system-activity-panel { overflow: hidden; }
+.thesis-app .system-activity-disclaimer { margin: 0 16px 12px; }
+.thesis-app .system-activity-list { display: grid; margin: 0; padding: 0; list-style: none; }
+.thesis-app .system-activity-entry { display: grid; grid-template-columns: 135px minmax(0, 1fr) auto; align-items: start; gap: 14px; padding: 13px 17px; border-top: 1px solid var(--border-color); }
+.thesis-app .system-activity-time { color: var(--text-secondary); font-size: 8px; }
+.thesis-app .system-activity-copy { display: grid; gap: 4px; }
+.thesis-app .system-activity-copy strong { color: var(--text-primary); font-size: 9px; }
+.thesis-app .system-activity-copy span { color: var(--text-secondary); font-size: 8px; }
+.thesis-app .system-activity-status { max-width: 220px; padding: 4px 7px; color: #f0ce81; background: #403923; border-radius: 4px; font-size: 8px; text-align: center; }
+.thesis-app .system-activity-status-alert { color: #ffc3c3; background: #492a35; }
 @media (max-width: 900px) {
+  .thesis-app .system-health-grid { grid-template-columns: 1fr 1fr; }
   .thesis-app .monitoring-settings-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 780px) {
@@ -905,6 +949,13 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .thesis-app .dashboard-status-note { width: 100%; margin-left: 17px; }
 }
 @media (max-width: 520px) {
+  .thesis-app .system-health-overall { align-items: flex-start; flex-direction: column; padding: 14px; }
+  .thesis-app .system-health-grid { grid-template-columns: 1fr; }
+  .thesis-app .system-activity-entry { grid-template-columns: 1fr auto; gap: 6px 10px; padding: 12px 10px; }
+  .thesis-app .system-activity-time { grid-column: 1 / -1; }
+  .thesis-app .system-activity-status { grid-column: 2; grid-row: 2; max-width: 135px; }
+  .thesis-app .system-activity-copy { grid-column: 1; grid-row: 2; }
+  .thesis-app .system-activity-disclaimer { margin: 0 9px 10px; }
   .thesis-app .central-notifications-header { align-items: flex-start; flex-direction: column; padding: 14px; }
   .thesis-app .notification-filter-tabs { gap: 2px; overflow-x: auto; padding: 0 9px 10px; }
   .thesis-app .notification-filter-tabs button { padding-inline: 8px; white-space: nowrap; }

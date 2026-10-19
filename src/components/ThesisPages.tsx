@@ -1,13 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import {
-  Activity, ArrowUpRight, Bell, Camera, Check, CircleAlert, Clock3, Info,
+  Activity, ArrowUpRight, Bell, Camera, Check, CircleAlert, Clock3, FileClock, Info,
   Cpu, Database, Mic2, Search, ShieldCheck, SlidersHorizontal,
   Smartphone, UserRound, Users, Video, Wifi, type LucideIcon,
 } from 'lucide-react'
 import { AcousticBadge, DecisionBadge } from './thesisBadges'
 import { acousticClasses, faceResults, type SecurityEvent } from '../models/securityEvent'
-import { demoDevices, demoHouseholdMember, demoSystem } from '../services/systemService'
+import { demoHouseholdMember } from '../services/systemService'
 import type { EventFilters } from '../services/eventService'
+import type { DashboardNotification } from '../services/notificationService'
 
 const formatTime = (timestamp: string) => new Intl.DateTimeFormat('en', { hour: 'numeric', minute: '2-digit' }).format(new Date(timestamp))
 const formatDate = (timestamp: string) => new Intl.DateTimeFormat('en', { month: '2-digit', day: '2-digit', year: 'numeric' }).format(new Date(timestamp))
@@ -131,24 +132,65 @@ function ResponseChip({ active, children }: { active: boolean; children: string 
 }
 
 export function SystemStatusPage() {
-  return <><div className="status-callout"><span className="status-dot" /><div><strong>System prototype · demo status</strong><p>Illustrative UI states, not telemetry from connected thesis hardware.</p></div><span className="demo-chip">NO LIVE TELEMETRY</span></div><div className="system-status-grid"><SystemCard title="EDGE COMPUTING" icon={Cpu} name={demoSystem.edge.name} status={demoSystem.edge.status} rows={[["Memory", demoSystem.edge.memory], ["CPU", demoSystem.edge.cpu], ["Memory status", demoSystem.edge.memoryStatus], ["Storage", demoSystem.edge.storage], ["Uptime", demoSystem.edge.uptime]]} /><SystemCard title="AUDIO SYSTEM" icon={Mic2} name={demoSystem.audio.name} status={demoSystem.audio.status} rows={[["Audio Monitoring", demoSystem.audio.monitoring], ["Audio Classifier", demoSystem.audio.classifier], ["Current State", demoSystem.audio.currentState], ["Audio path", "Mel-Spectrogram → Lightweight CNN"]]} /><SystemCard title="CAMERA · EVENT-TRIGGERED" icon={Video} name={demoSystem.camera.name} status={demoSystem.camera.status} rows={[["Rolling Buffer", demoSystem.camera.rollingBuffer], ["Face Detection", demoSystem.camera.faceDetection], ["Facial Recognition", demoSystem.camera.recognition], ["Recognition model", "MobileFaceNet-based"]]} note={demoSystem.camera.note} /><SystemCard title="CLOUD" icon={Database} name={demoSystem.cloud.name} status={demoSystem.cloud.status} rows={[["Last Sync", demoSystem.cloud.lastSync], ["Event Logs", demoSystem.cloud.eventLogs], ["Selected Event Media", demoSystem.cloud.selectedMedia]]} note={demoSystem.cloud.privacy} /></div><PipelinePanel /></>
+  type HealthStatus = 'Online' | 'Degraded' | 'Offline' | 'Unknown' | 'Not connected'
+  const components: { name: string; status: HealthStatus; integration: string; icon: LucideIcon }[] = [
+    { name: 'Audio monitoring pipeline & microphone', status: 'Not connected', integration: 'Connect the I2S microphone and expose a pipeline health check.', icon: Mic2 },
+    { name: 'Camera & frame capture', status: 'Not connected', integration: 'Connect the camera and expose frame-capture health.', icon: Video },
+    { name: 'Raspberry Pi processing service', status: 'Not connected', integration: 'Connect the edge service and report its health endpoint.', icon: Cpu },
+    { name: 'Network connectivity', status: 'Unknown', integration: 'Add a backend network probe; no connectivity check is available.', icon: Wifi },
+    { name: 'SMS modem/service', status: 'Not connected', integration: 'Connect an SMS provider/modem and return delivery results.', icon: Smartphone },
+    { name: 'Local storage & logging', status: 'Unknown', integration: 'Add storage and log-writer checks; current event records are demo data.', icon: Database },
+  ]
+  const overallStatus = components.some((item) => item.status === 'Offline') ? 'Offline'
+    : components.some((item) => item.status === 'Degraded') ? 'Degraded'
+      : components.some((item) => item.status === 'Not connected') ? 'Not connected'
+        : components.some((item) => item.status === 'Unknown') ? 'Unknown'
+          : 'All systems online'
+  return <section className="system-health-page">
+    <div className={`system-health-overall system-health-${overallStatus.toLowerCase().replaceAll(' ', '-')}`}>
+      <div><span className="system-health-label">OVERALL STATUS</span><h2>{overallStatus}</h2><p>Health checks are not connected; this status is not based on live telemetry.</p></div>
+      <span className="demo-chip">NO LIVE HEALTH CHECKS</span>
+    </div>
+    <div className="system-health-grid">{components.map(({ name, status, integration, icon: Icon }) => <article className="panel system-health-card" key={name}>
+      <div className="system-health-card-heading"><span className="system-health-icon"><Icon size={17} /></span><span className={`system-health-state system-health-state-${status.toLowerCase().replaceAll(' ', '-')}`}>{status}</span></div>
+      <h3>{name}</h3>
+      <p>{integration}</p>
+    </article>)}</div>
+    <p className="system-health-note"><Info size={15} /> This frontend has no component-health API. “All systems online” will only be shown after every required component reports a healthy state.</p>
+  </section>
 }
 
-function SystemCard({ title, icon: Icon, name, status, rows, note }: { title: string; icon: LucideIcon; name: string; status: string; rows: [string, string][]; note?: string }) {
-  return <section className="panel system-card"><div className="system-card-head"><span className="system-icon"><Icon size={18} /></span><span className="system-eyebrow">{title}</span></div><div className="system-name-row"><h2>{name}</h2><span className={`system-state ${status === 'Connected' || status === 'Online' ? 'state-ok' : 'state-muted'}`}><i />{status}</span></div><div className="system-details">{rows.map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>{note && <p className="system-note">{note}</p>}</section>
-}
-
-function PipelinePanel() {
-  return <section className="panel pipeline-explainer"><div className="panel-heading"><div><h2>Audio-first processing</h2><p>Facial recognition is event-triggered, not continuous</p></div></div><div className="pipeline-flow"><PipelineBlock icon={Mic2} title="ICS-43434" note="Audio input" /><b>→</b><PipelineBlock icon={Activity} title="Mel-Spectrogram" note="Lightweight CNN" /><b>→</b><PipelineBlock icon={CircleAlert} title="Qualifying audio" note="Acoustic class" /><b>→</b><PipelineBlock icon={Video} title="Camera frame" note="Short rolling buffer" muted /><b>→</b><PipelineBlock icon={UserRound} title="Face check" note="On qualifying event" muted /><b>→</b><PipelineBlock icon={ShieldCheck} title="Rule-based" note="Decision / response" /></div></section>
-}
-
-function PipelineBlock({ icon: Icon, title, note, muted = false }: { icon: LucideIcon; title: string; note: string; muted?: boolean }) {
-  return <span className={`pipeline-block ${muted ? 'pipeline-standby' : ''}`}><Icon size={17} /><strong>{title}</strong><small>{note}</small></span>
-}
-
-export function DevicesPage() {
-  const icons = [Mic2, Video, Database, Wifi, Bell]
-  return <><div className="device-host-card"><span className="device-card-icon"><Cpu size={20} /></span><div><span className="device-kind">EDGE COMPUTER · DEMO STATUS</span><h2>Raspberry Pi 5</h2><p>16 GB RAM · Online in sample interface</p></div><span className="device-status"><span className="status-dot" />Online</span></div><div className="device-list-grid thesis-device-grid">{demoDevices.slice(1).map((device, index) => { const Icon = icons[index]; return <article className="device-card" key={device.name}><div className="device-card-top"><span className="device-card-icon"><Icon size={19} /></span><span className="device-status"><span className="status-dot" />{device.status}</span></div><span className="device-kind">CONNECTED COMPONENT</span><h3>{device.name}</h3><p>{device.detail}</p></article> })}</div><p className="page-inline-note">The physical sound alert model has not been specified. No buzzer model is assumed.</p></>
+export function SystemActivityLogPage({ notifications, modeActivity }: {
+  notifications: DashboardNotification[]
+  modeActivity: { id: string; timestamp: string; title: string; detail: string; status: string }[]
+}) {
+  const logEntries = [
+    ...notifications.map((entry) => ({
+      id: entry.id,
+      timestamp: entry.timestamp,
+      title: entry.title,
+      detail: entry.detail,
+      status: entry.status,
+      level: entry.level,
+      acknowledgementStatus: entry.acknowledgementStatus,
+      deliveryStatus: entry.deliveryStatus,
+    })),
+    ...modeActivity.map((entry) => ({
+      ...entry,
+      level: 'SYSTEM',
+      acknowledgementStatus: 'Not recorded',
+      deliveryStatus: 'Not applicable',
+    })),
+  ].sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+  return <section className="panel system-activity-panel">
+    <div className="panel-heading"><div><h2>System Activity Log</h2><p>{logEntries.length} event records · sample and simulated data only</p></div><span className="demo-chip">NO SYSTEM AUDIT FEED</span></div>
+    <p className="system-activity-disclaimer"><Info size={15} /> Startup/shutdown, component connectivity, access, and SMS delivery logs are not available in this app. Entries below reuse the existing sample event and in-session simulated motion data; they are not a system audit log.</p>
+    {logEntries.length ? <ol className="system-activity-list">{logEntries.map((entry) => <li className="system-activity-entry" key={entry.id}>
+      <span className="system-activity-time">{new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(entry.timestamp))}</span>
+      <span className="system-activity-copy"><strong>{entry.title}</strong><span>{entry.detail}</span>{entry.acknowledgementStatus !== 'Not recorded' && <span>{entry.acknowledgementStatus}</span>}<span>{entry.deliveryStatus}</span></span>
+      <span className={`system-activity-status ${entry.level.startsWith('L4') ? 'system-activity-status-alert' : ''}`}>{entry.status}</span>
+    </li>)}</ol> : <div className="empty-state"><span><FileClock size={18} /></span><strong>No event activity recorded</strong><p>New events will appear here when available.</p></div>}
+  </section>
 }
 
 export function HouseholdPage({ name, setName, recognitionEnabled, setRecognitionEnabled, enrollmentRequests, onRequestEnrollment }: { name: string; setName: (name: string) => void; recognitionEnabled: boolean; setRecognitionEnabled: (enabled: boolean) => void; enrollmentRequests: { id: string; name: string; createdAt: string }[]; onRequestEnrollment: (name: string) => void }) {

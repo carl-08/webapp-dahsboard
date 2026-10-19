@@ -3,9 +3,9 @@ import { Activity, Bell, Camera, ChevronDown, ChevronRight, Cpu, FileClock, Layo
 import { EventDetailsModal } from './components/EventDetailsModal'
 import { NotificationCenter } from './components/NotificationCenter'
 import {
-  DevicesPage, EventHistoryPage, GuestPassesPage, HouseholdPage, L2VerificationPage,
+  EventHistoryPage, GuestPassesPage, HouseholdPage, L2VerificationPage,
   L4HighAlertPage, LiveViewPage, MonitoringModesPage, MotionEventsPage, NotificationSettingsPage,
-  OverviewPage, PrivacySettingsPage, SystemSettingsPage, SystemStatusPage,
+  OverviewPage, PrivacySettingsPage, SystemActivityLogPage, SystemSettingsPage, SystemStatusPage,
   type DemoFaceOutcome, type DemoRole, type DemoWorkflowState, type GuestPass,
 } from './components/ThesisPages'
 import { demoEvents, queryEvents, type EventFilters } from './services/eventService'
@@ -14,7 +14,7 @@ import { demoHouseholdMember, demoSystem } from './services/systemService'
 import type { SecurityEvent } from './models/securityEvent'
 import './App.css'
 
-type Page = 'Overview' | 'Notifications & Alerts' | 'Event History' | 'System Status' | 'Devices' | 'Household Members' | 'Guest Passes' | 'Notification Settings' | 'Privacy Settings' | 'System Settings' | 'Monitoring Modes' | 'Motion Events' | 'Live View'
+type Page = 'Overview' | 'Notifications & Alerts' | 'Event History' | 'System Status' | 'System Activity Log' | 'Household Members' | 'Guest Passes' | 'Notification Settings' | 'Privacy Settings' | 'System Settings' | 'Monitoring Modes' | 'Motion Events' | 'Live View'
 interface NavigationItem {
   label: string
   page: Page
@@ -32,18 +32,20 @@ const groups: NavigationGroup[] = [
     { label: 'Notifications & Alerts', page: 'Notifications & Alerts', icon: Bell },
     { label: 'Event History', page: 'Event History', icon: FileClock },
   ] },
-  { key: 'monitoring', title: 'Monitoring', icon: Activity, items: [
-    { label: 'Monitoring Modes', page: 'Monitoring Modes', icon: Settings },
+  { key: 'users-monitoring', title: 'Users & Monitoring', icon: Users, items: [
+    { label: 'User Enrollment', page: 'Household Members', icon: Users },
+    { label: 'Live Monitoring', page: 'Live View', icon: Camera },
     { label: 'Motion Events', page: 'Motion Events', icon: Activity },
   ] },
+  { key: 'device-status', title: 'Device Status', icon: Cpu, items: [
+    { label: 'System Health', page: 'System Status', icon: Activity },
+    { label: 'Monitoring Mode', page: 'Monitoring Modes', icon: Settings },
+    { label: 'System Activity Log', page: 'System Activity Log', icon: FileClock },
+  ] },
   { key: 'camera-visitors', title: 'Camera & Visitors', icon: Camera, items: [
-    { label: 'Live View', page: 'Live View', icon: Camera },
-    { label: 'Household Members', page: 'Household Members', icon: Users },
     { label: 'Guest Passes', page: 'Guest Passes', icon: Users },
   ] },
-  { key: 'system-settings', title: 'System & Settings', icon: Cpu, items: [
-    { label: 'Device Status', page: 'Devices', icon: Cpu },
-    { label: 'System Status', page: 'System Status', icon: Activity },
+  { key: 'settings', title: 'Settings', icon: Settings, items: [
     { label: 'Notification Settings', page: 'Notification Settings', icon: Bell },
     { label: 'Privacy Settings', page: 'Privacy Settings', icon: ShieldCheck },
     { label: 'System Settings', page: 'System Settings', icon: Settings },
@@ -54,8 +56,8 @@ const subtitles: Record<Page, string> = {
   Overview: 'Audio events, visual verification, and contextual response at a glance.',
   'Notifications & Alerts': 'Review notifications, alert levels, simulated verification, and sample event status.',
   'Event History': 'Search and filter the recorded audio-triggered event history.',
-  'System Status': 'Demo status for edge, audio, camera, and cloud subsystems.',
-  Devices: 'Thesis prototype hardware and connected components.',
+  'System Status': 'Current component health availability and required backend integrations.',
+  'System Activity Log': 'Chronological sample event activity from the existing event records.',
   'Household Members': 'Manage enrollment status without exposing biometric data.',
   'Guest Passes': 'Create temporary guest passes that expire after 1–7 days.',
   'Notification Settings': 'Configure channels for future system integration.',
@@ -92,6 +94,7 @@ export default function Dashboard() {
   const [faceCheckRemaining, setFaceCheckRemaining] = useState(10)
   const [verificationRemaining, setVerificationRemaining] = useState(60)
   const [motionNotificationId, setMotionNotificationId] = useState<string | null>(null)
+  const [modeActivity, setModeActivity] = useState<{ id: string; timestamp: string; title: string; detail: string; status: string }[]>([])
   const [guestPasses, setGuestPasses] = useState<GuestPass[]>([])
   const guestPassSequence = useRef(0)
   const visibleEvents = useMemo(() => queryEvents(demoEvents, { ...filters, search: [filters.search, query].filter(Boolean).join(' ') }), [filters, query])
@@ -245,8 +248,17 @@ export default function Dashboard() {
         </>}
         {page === 'Event History' && <EventHistoryPage events={visibleEvents} filters={filters} setFilters={setFilters} onOpenEvent={setSelectedEvent} />}
         {page === 'System Status' && <SystemStatusPage />}
-        {page === 'Devices' && <DevicesPage />}
-        {page === 'Monitoring Modes' && <MonitoringModesPage demoRole={demoRole} onDemoRoleChange={setDemoRole} isAdministrator={isAdministrator} advancedMode={advancedMode} onAdvancedModeChange={setAdvancedMode} />}
+        {page === 'System Activity Log' && <SystemActivityLogPage notifications={notifications} modeActivity={modeActivity} />}
+        {page === 'Monitoring Modes' && <MonitoringModesPage demoRole={demoRole} onDemoRoleChange={setDemoRole} isAdministrator={isAdministrator} advancedMode={advancedMode} onAdvancedModeChange={(enabled) => {
+          setAdvancedMode(enabled)
+          setModeActivity((entries) => [...entries, {
+            id: `mode-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            title: 'Monitoring mode changed',
+            detail: `${enabled ? 'Advanced Monitoring Mode enabled' : 'Standard Mode selected'} using the local UI demo control.`,
+            status: 'UI simulation · not a backend-authorized change',
+          }])
+        }} />}
         {page === 'Motion Events' && <MotionEventsPage workflowState={workflowState} faceCheckRemaining={faceCheckRemaining} motionTimestamp={motionTimestamp} isAdministrator={isAdministrator} advancedMode={advancedMode} onSimulateMotion={simulateMotion} onOpenVerification={() => navigate('Notifications & Alerts')} />}
         {page === 'Live View' && <LiveViewPage />}
         {page === 'Household Members' && <HouseholdPage name={memberName} setName={setMemberName} recognitionEnabled={recognitionEnabled} setRecognitionEnabled={setRecognitionEnabled} enrollmentRequests={enrollmentRequests} onRequestEnrollment={(name) => setEnrollmentRequests((requests) => [...requests, { id: `HM-${String(requests.length + 2).padStart(3, '0')}`, name, createdAt: new Date().toISOString() }])} />}
