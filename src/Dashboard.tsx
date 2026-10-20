@@ -3,11 +3,12 @@ import { Activity, Bell, Camera, ChevronDown, ChevronRight, Cpu, FileClock, Layo
 import { EventDetailsModal } from './components/EventDetailsModal'
 import { NotificationCenter } from './components/NotificationCenter'
 import {
-  EventHistoryPage, GuestPassesPage, HouseholdPage, L2VerificationPage,
+  EventHistoryPage, GuestPassesPage, L2VerificationPage,
   L4HighAlertPage, LiveViewPage, MonitoringModesPage, MotionEventsPage, NotificationSettingsPage,
   OverviewPage, PrivacySettingsPage, SystemActivityLogPage, SystemSettingsPage, SystemStatusPage,
   type DemoFaceOutcome, type DemoRole, type DemoWorkflowState, type GuestPass,
 } from './components/ThesisPages'
+import { UserEnrollmentPage } from './components/UserEnrollmentPage'
 import { demoEvents, queryEvents, type EventFilters } from './services/eventService'
 import { notificationsFromEvents, type DashboardNotification } from './services/notificationService'
 import { demoHouseholdMember, demoSystem } from './services/systemService'
@@ -53,7 +54,7 @@ const groups: NavigationGroup[] = [
 ]
 const emptyFilters: EventFilters = { search: '', startDate: '', endDate: '', acousticClass: 'All', faceResult: 'All', decision: 'All' }
 const subtitles: Record<Page, string> = {
-  Overview: 'Audio events, visual verification, and contextual response at a glance.',
+  Overview: 'COJ-CS System Overview',
   'Notifications & Alerts': 'Review notifications, alert levels, simulated verification, and sample event status.',
   'Event History': 'Search and filter the recorded audio-triggered event history.',
   'System Status': 'Current component health availability and required backend integrations.',
@@ -81,9 +82,7 @@ export default function Dashboard() {
   const [filters, setFilters] = useState(emptyFilters)
   const [query, setQuery] = useState('')
   const [notificationSettings, setNotificationSettings] = useState({ web: true, sms: true, physical: true })
-  const [memberName, setMemberName] = useState(demoHouseholdMember.name)
-  const [recognitionEnabled, setRecognitionEnabled] = useState(true)
-  const [enrollmentRequests, setEnrollmentRequests] = useState<{ id: string; name: string; createdAt: string }[]>([])
+  const [memberName] = useState(demoHouseholdMember.name)
   const [homeName, setHomeName] = useState(demoSystem.homeName)
   const [savedHomeName, setSavedHomeName] = useState(demoSystem.homeName)
   const [demoRole, setDemoRole] = useState<DemoRole>('Administrator')
@@ -205,8 +204,8 @@ export default function Dashboard() {
 
   return <div className="app-shell thesis-app">
     <aside className={`sidebar ${mobileNavOpen ? 'sidebar-open' : ''}`}>
-      <button className="brand" onClick={() => navigate('Overview')}><span className="brand-mark"><ShieldCheck size={21} /></span><span className="brand-name">Haven<span>home</span></span></button>
-      <div className="home-switcher"><span className="home-avatar">H</span><span className="home-copy"><strong>{homeName}</strong><small>Thesis prototype · Demo data</small></span><ChevronDown size={15} /></div>
+      <button className="brand" onClick={() => navigate('Overview')}><span className="brand-mark"><ShieldCheck size={21} /></span><span className="brand-name">COJ-CS</span></button>
+      <div className="home-switcher"><span className="home-avatar">C</span><span className="home-copy"><strong>{homeName}</strong><small>System prototype · Demo data</small></span><ChevronDown size={15} /></div>
       {groups.map((group) => {
         const GroupIcon = group.icon
         const isExpanded = expandedGroups.includes(group.key)
@@ -232,8 +231,8 @@ export default function Dashboard() {
       <header className="topbar"><button className="icon-button mobile-menu" aria-label="Open navigation" onClick={() => setMobileNavOpen(true)}><Menu size={20} /></button><div className="breadcrumb"><span>{homeName}</span><span className="breadcrumb-slash">/</span><strong>{groups.flatMap((group) => group.items).find((item) => item.page === page)?.label ?? page}</strong></div>
         <div className="topbar-actions"><label className="search-box"><Search size={17} /><input aria-label="Search events" placeholder="Search events..." value={query} onChange={(event) => setQuery(event.target.value)} />{query && <button className="search-clear" aria-label="Clear search" onClick={() => setQuery('')}><X size={14} /></button>}</label><button className="icon-button notification-button" aria-label={`Notifications & Alerts, ${unread} unread`} onClick={() => navigate('Notifications & Alerts')}><Bell size={19} />{unread > 0 && <span className="notification-count">{unread > 99 ? '99+' : unread}</span>}</button><span className="topbar-divider" /><span className="today-label">{todayText}</span></div>
       </header>
-      <div className="page-content"><div className="page-heading"><div><p className="eyebrow">HAVEN HOME · SECURITY DASHBOARD</p><h1>{groups.flatMap((group) => group.items).find((item) => item.page === page)?.label ?? page}</h1><p className="page-subtitle">{subtitles[page]}</p></div>{(page === 'Overview' || page === 'Notifications & Alerts') && <span className="demo-chip">DEMO DATA</span>}</div>
-        {page === 'Overview' && <OverviewPage events={demoEvents} advancedMode={advancedMode} onOpenEvent={setSelectedEvent} onNavigate={navigate} />}
+      <div className="page-content"><div className="page-heading"><div><p className="eyebrow">{page === 'Overview' ? 'COJ-CS SYSTEM OVERVIEW' : 'COJ-CS SECURITY DASHBOARD'}</p><h1>{groups.flatMap((group) => group.items).find((item) => item.page === page)?.label ?? page}</h1><p className="page-subtitle">{subtitles[page]}</p></div>{(page === 'Overview' || page === 'Notifications & Alerts') && <span className="demo-chip">DEMO DATA</span>}</div>
+        {page === 'Overview' && <OverviewPage events={demoEvents} advancedMode={advancedMode} unreadNotifications={unread} activityEntries={modeActivity} onOpenEvent={setSelectedEvent} onNavigate={navigate} />}
         {page === 'Notifications & Alerts' && <>
           {(workflowState === 'face-check' || workflowState === 'verification' || workflowState === 'safe') && <L2VerificationPage workflowState={workflowState} remainingSeconds={verificationRemaining} faceCheckRemaining={faceCheckRemaining} onSafe={() => {
             setWorkflowState('safe')
@@ -261,7 +260,7 @@ export default function Dashboard() {
         }} />}
         {page === 'Motion Events' && <MotionEventsPage workflowState={workflowState} faceCheckRemaining={faceCheckRemaining} motionTimestamp={motionTimestamp} isAdministrator={isAdministrator} advancedMode={advancedMode} onSimulateMotion={simulateMotion} onOpenVerification={() => navigate('Notifications & Alerts')} />}
         {page === 'Live View' && <LiveViewPage />}
-        {page === 'Household Members' && <HouseholdPage name={memberName} setName={setMemberName} recognitionEnabled={recognitionEnabled} setRecognitionEnabled={setRecognitionEnabled} enrollmentRequests={enrollmentRequests} onRequestEnrollment={(name) => setEnrollmentRequests((requests) => [...requests, { id: `HM-${String(requests.length + 2).padStart(3, '0')}`, name, createdAt: new Date().toISOString() }])} />}
+        {page === 'Household Members' && <UserEnrollmentPage />}
         {page === 'Guest Passes' && <GuestPassesPage passes={guestPasses} onCreatePass={createGuestPass} onRevokePass={(id) => setGuestPasses((passes) => passes.filter((pass) => pass.id !== id))} />}
         {page === 'Notification Settings' && <NotificationSettingsPage settings={notificationSettings} setSettings={setNotificationSettings} />}
         {page === 'Privacy Settings' && <PrivacySettingsPage />}

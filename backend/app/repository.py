@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import sqlite3
 from datetime import datetime, timezone
@@ -12,8 +12,11 @@ from .models import (
     ComponentStatus,
     DeviceRecord,
     DeviceRegistration,
+    EnrollmentStatus,
     EventCreate,
     EventRecord,
+    FaceEnrollmentResult,
+    HouseholdMemberRecord,
     MonitoringModeName,
     MonitoringModeRecord,
 )
@@ -149,7 +152,8 @@ def get_monitoring_mode(database: Database) -> MonitoringModeRecord:
 
 
 def set_monitoring_mode(
-    database: Database, mode: MonitoringModeName
+    database: Database,
+    mode: MonitoringModeName,
 ) -> MonitoringModeRecord:
     updated_at = utc_now()
     with database.connect() as connection:
@@ -229,5 +233,92 @@ def acknowledge_event(database: Database, event_id: UUID) -> EventRecord | None:
             occurred_at=normalized_datetime(row["occurred_at"]),
             detail=row["detail"],
             acknowledgement_status=row["acknowledgement_status"],
-            acknowledged_at=normalized_datetime(row["acknowledged_at"]),
+            acknowledged_at=normalized_datetime(row["acknowledged_at"])
+            if row["acknowledged_at"]
+            else None,
         )
+
+
+def _household_member_record(row: sqlite3.Row) -> HouseholdMemberRecord:
+    return HouseholdMemberRecord(
+        member_id=UUID(row["member_id"]),
+        name=row["name"],
+        photo_reference=row["photo_reference"],
+        enrollment_status=EnrollmentStatus(row["enrollment_status"]),
+        status_message=row["status_message"],
+        created_at=normalized_datetime(row["created_at"]),
+        updated_at=normalized_datetime(row["updated_at"]),
+    )
+
+
+def create_household_member(
+    database: Database,
+    member_id: UUID,
+    name: str,
+    photo_reference: str,
+) -> HouseholdMemberRecord:
+    now = utc_now()
+    with database.connect() as connection:
+        connection.execute(
+            """
+            INSERT INTO household_members (
+                member_id, name, photo_reference, enrollment_status,
+                status_message, created_at, updated_at
+            ) VALUES (?, ?, ?, 'pending', NULL, ?, ?)
+            """,
+            (str(member_id), name, photo_reference, now.isoformat(), now.isoformat()),
+        )
+        row = connection.execute(
+            "SELECT * FROM household_members WHERE member_id = ?", (str(member_id),)
+        ).fetchone()
+        return _household_member_record(row)
+
+
+def list_household_members(database: Database) -> list[HouseholdMemberRecord]:
+    with database.connect() as connection:
+        rows = connection.execute(
+            "SELECT * FROM household_members ORDER BY created_at DESC"
+        ).fetchall()
+        return [_household_member_record(row) for row in rows]
+
+
+def get_household_member(
+    database: Database,
+    member_id: UUID,
+) -> HouseholdMemberRecord | None:
+    with database.connect() as connection:
+        row = connection.execute(
+            "SELECT * FROM household_members WHERE member_id = ?", (str(member_id),)
+        ).fetchone()
+        return _household_member_record(row) if row else None
+
+
+def delete_household_member(database: Database, member_id: UUID) -> bool:
+    with database.connect() as connection:
+        cursor = connection.execute(
+            "DELETE FROM household_members WHERE member_id = ?", (str(member_id),)
+        )
+        return cursor.rowcount > 0
+
+
+def apply_face_processing_result(
+    database: Database,
+    member_id: UUID,
+    result: FaceEnrollmentResult,
+) -> HouseholdMemberRecord | None:
+    now = utc_now()
+    with database.connect() as connection:
+        cursor = connection.execute(
+            """
+            UPDATE household_members
+            SET enrollment_status = ?, status_message = ?, updated_at = ?
+            WHERE member_id = ?
+            """,
+            (result.status.value, result.message, now.isoformat(), str(member_id)),
+        )
+        if cursor.rowcount == 0:
+            return None
+        row = connection.execute(
+            "SELECT * FROM household_members WHERE member_id = ?", (str(member_id),)
+        ).fetchone()
+        return _household_member_record(row)

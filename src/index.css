@@ -11,6 +11,13 @@
   --safe-green: #61bd8b;
   --pending-amber: #e5b75e;
   --alert-red: #e77878;
+  --glass-surface: rgb(19 42 67 / 76%);
+  --glass-surface-raised: rgb(25 54 80 / 82%);
+  --glass-sidebar: rgb(13 31 53 / 86%);
+  --glass-border: rgb(174 207 237 / 13%);
+  --glass-highlight: rgb(255 255 255 / 7%);
+  --glass-shadow: 0 14px 34px rgb(0 8 22 / 20%);
+  --glass-blur: 10px;
   --text: var(--text-secondary);
   --text-h: var(--text-primary);
   --bg: var(--page-bg);

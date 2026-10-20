@@ -1,23 +1,42 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import io
 import sqlite3
 from pathlib import Path
 from uuid import uuid4
 
+from PIL import Image
 from fastapi.testclient import TestClient
+import pytest
 
 from app.config import Settings
 from app.main import create_app
 from app.models import ComponentName
 
 
-def client_for(tmp_path: Path) -> TestClient:
+TEST_API_TOKEN = "test-only-development-token-0123456789"
+
+
+def client_for(tmp_path: Path, api_token: str | None = None) -> TestClient:
     settings = Settings(
         database_path=tmp_path / "haven-test.sqlite3",
+        photo_storage_path=tmp_path / "private-photos",
+        api_token=api_token,
         cors_origins=("http://127.0.0.1:5173",),
     )
     return TestClient(create_app(settings))
+
+
+def image_bytes(image_format: str) -> bytes:
+    image = Image.new("RGB", (32, 24), color=(45, 105, 160))
+    buffer = io.BytesIO()
+    image.save(buffer, format=image_format)
+    return buffer.getvalue()
+
+
+def auth_headers() -> dict[str, str]:
+    return {"Authorization": f"Bearer {TEST_API_TOKEN}"}
 
 
 def test_health_endpoint_reports_backend_status_and_version(tmp_path: Path):
@@ -184,7 +203,123 @@ def test_database_initialization_is_idempotent(tmp_path: Path):
 
 
 def test_remote_bind_is_rejected_until_authentication_exists():
-    import pytest
-
     with pytest.raises(ValueError, match="Remote binding is disabled"):
         Settings(host="0.0.0.0")
+
+
+def test_enrollment_routes_fail_closed_without_configured_token(tmp_path: Path):
+    with client_for(tmp_path) as client:
+        response = client.get("/api/v1/members", headers=auth_headers())
+
+    assert response.status_code == 503
+
+
+@pytest.mark.parametrize(("image_format", "media_type"), [
+    ("JPEG", "image/jpeg"),
+    ("PNG", "image/png"),
+])
+def test_member_photo_upload_list_status_and_private_photo_access(
+    tmp_path: Path, image_format: str, media_type: str
+):
+    with client_for(tmp_path, TEST_API_TOKEN) as client:
+        created = client.post(
+            "/api/v1/members",
+            headers=auth_headers(),
+            data={"name": "  Alex  "},
+            files={"photo": ("../../unsafe-name.png", image_bytes(image_format), "text/plain")},
+        )
+        assert created.status_code == 201
+        member = created.json()
+        listed = client.get("/api/v1/members", headers=auth_headers())
+        detail = client.get(
+            f"/api/v1/members/{member['member_id']}", headers=auth_headers()
+        )
+        status_response = client.get(
+            f"/api/v1/members/{member['member_id']}/status", headers=auth_headers()
+        )
+        photo = client.get(
+            f"/api/v1/members/{member['member_id']}/photo", headers=auth_headers()
+        )
+        unauthorized_photo = client.get(f"/api/v1/members/{member['member_id']}/photo")
+
+    assert member["name"] == "Alex"
+    assert member["enrollment_status"] == "pending"
+    assert member["photo_reference"] != "../../unsafe-name.png"
+    assert len(listed.json()) == 1
+    assert detail.json()["member_id"] == member["member_id"]
+    assert status_response.json() == "pending"
+    assert photo.status_code == 200
+    assert photo.headers["content-type"] == media_type
+    assert photo.headers["cache-control"] == "private, no-store"
+    with Image.open(io.BytesIO(photo.content)) as decoded_photo:
+        assert decoded_photo.format == image_format
+        assert decoded_photo.size == (32, 24)
+    assert unauthorized_photo.status_code == 401
+
+
+def test_member_routes_reject_missing_and_invalid_bearer_tokens(tmp_path: Path):
+    with client_for(tmp_path, TEST_API_TOKEN) as client:
+        missing = client.get("/api/v1/members")
+        invalid = client.get(
+            "/api/v1/members",
+            headers={"Authorization": "Bearer invalid-token"},
+        )
+
+    assert missing.status_code == 401
+    assert invalid.status_code == 401
+
+
+@pytest.mark.parametrize(("filename", "contents", "content_type"), [
+    ("face.jpg", b"not an image", "image/jpeg"),
+    ("face.gif", b"GIF89a", "image/gif"),
+])
+def test_member_photo_upload_rejects_invalid_or_oversized_files(
+    tmp_path: Path, filename: str, contents: bytes, content_type: str
+):
+    with client_for(tmp_path, TEST_API_TOKEN) as client:
+        response = client.post(
+            "/api/v1/members",
+            headers=auth_headers(),
+            data={"name": "Alex"},
+            files={"photo": (filename, contents, content_type)},
+        )
+
+    assert response.status_code == 400
+
+
+def test_member_photo_upload_rejects_oversized_files(tmp_path: Path):
+    with client_for(tmp_path, TEST_API_TOKEN) as client:
+        response = client.post(
+            "/api/v1/members",
+            headers=auth_headers(),
+            data={"name": "Alex"},
+            files={"photo": ("face.png", b"x" * (5 * 1024 * 1024 + 1), "image/png")},
+        )
+
+    assert response.status_code == 413
+
+
+def test_member_photo_delete_removes_record_and_private_file(tmp_path: Path):
+    with client_for(tmp_path, TEST_API_TOKEN) as client:
+        created = client.post(
+            "/api/v1/members",
+            headers=auth_headers(),
+            data={"name": "Alex"},
+            files={"photo": ("face.png", image_bytes("PNG"), "image/png")},
+        )
+        member = created.json()
+        private_path = tmp_path / "private-photos" / member["photo_reference"]
+        assert private_path.is_file()
+
+        deleted = client.delete(
+            f"/api/v1/members/{member['member_id']}", headers=auth_headers()
+        )
+        listed = client.get("/api/v1/members", headers=auth_headers())
+        missing_photo = client.get(
+            f"/api/v1/members/{member['member_id']}/photo", headers=auth_headers()
+        )
+
+    assert deleted.status_code == 204
+    assert listed.json() == []
+    assert missing_photo.status_code == 404
+    assert not private_path.exists()

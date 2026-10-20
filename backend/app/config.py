@@ -17,6 +17,8 @@ class Settings:
     host: str = "127.0.0.1"
     port: int = 8000
     database_path: Path = BACKEND_ROOT / "data" / "haven.sqlite3"
+    photo_storage_path: Path = BACKEND_ROOT / "data" / "face_photos"
+    api_token: str | None = None
     cors_origins: tuple[str, ...] = (
         "http://127.0.0.1:5173",
         "http://localhost:5173",
@@ -34,6 +36,15 @@ class Settings:
             )
         if not 1 <= self.port <= 65535:
             raise ValueError("HAVEN_PORT must be between 1 and 65535.")
+        if self.api_token is not None and len(self.api_token) < 32:
+            raise ValueError("HAVEN_API_TOKEN must be at least 32 characters.")
+        public_root = BACKEND_ROOT.parent / "public"
+        try:
+            self.photo_storage_path.resolve().relative_to(public_root.resolve())
+        except ValueError:
+            pass
+        else:
+            raise ValueError("Photo storage must be outside the public frontend directory.")
 
     @classmethod
     def from_environment(cls) -> Settings:
@@ -44,6 +55,14 @@ class Settings:
             raw_database_path
             if raw_database_path.is_absolute()
             else BACKEND_ROOT / raw_database_path
+        )
+        raw_photo_storage_path = Path(
+            os.getenv("HAVEN_PHOTO_STORAGE_PATH", "data/face_photos")
+        )
+        photo_storage_path = (
+            raw_photo_storage_path
+            if raw_photo_storage_path.is_absolute()
+            else BACKEND_ROOT / raw_photo_storage_path
         )
         raw_origins = os.getenv(
             "HAVEN_CORS_ORIGINS",
@@ -59,5 +78,7 @@ class Settings:
             host=os.getenv("HAVEN_HOST", "127.0.0.1"),
             port=port,
             database_path=database_path,
+            photo_storage_path=photo_storage_path,
+            api_token=os.getenv("HAVEN_API_TOKEN") or None,
             cors_origins=origins,
         )

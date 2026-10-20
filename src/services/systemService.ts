@@ -1,5 +1,5 @@
 export const demoSystem = {
-  homeName: 'Haven Home',
+  homeName: 'COJ-CS',
   edge: { name: 'Raspberry Pi 5', memory: '16 GB RAM', status: 'Online', cpu: 'Normal', memoryStatus: 'Normal', storage: 'Normal', uptime: '3 days, 8 hours', responseTime: '1.42 s', responseTimeLabel: 'Sample demo value · not measured' },
   audio: { name: 'ICS-43434 I2S Microphone', status: 'Connected', monitoring: 'Active', classifier: 'Ready', currentState: 'Monitoring' },
   camera: { name: 'Raspberry Pi Camera Module 3', status: 'Connected', rollingBuffer: 'Active', faceDetection: 'Standby', recognition: 'Standby', note: 'Visual processing starts only after a qualifying acoustic event.' },

@@ -91,3 +91,29 @@ class EventCreate(BaseModel):
 class EventRecord(EventCreate):
     acknowledgement_status: str
     acknowledged_at: datetime | None = None
+
+
+class EnrollmentStatus(StrEnum):
+    PENDING = "pending"
+    PROCESSING = "processing"
+    ENROLLED = "enrolled"
+    FAILED = "failed"
+
+
+class HouseholdMemberCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+
+
+class HouseholdMemberRecord(BaseModel):
+    member_id: UUID
+    name: str
+    photo_reference: str
+    enrollment_status: EnrollmentStatus
+    status_message: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class FaceEnrollmentResult(BaseModel):
+    status: EnrollmentStatus
+    message: str | None = Field(default=None, max_length=500)

@@ -975,3 +975,241 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   .thesis-app .dashboard-event-row { gap: 8px; }
   .thesis-app .dashboard-event-time { width: 68px; flex-basis: 68px; }
 }
+
+.thesis-app .dashboard-overview { display: grid; gap: 14px; min-width: 0; }
+.thesis-app .dashboard-status-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.thesis-app .dashboard-overview-card {
+  display: flex;
+  min-width: 0;
+  min-height: 139px;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 15px;
+  color: var(--text-primary);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  text-align: left;
+}
+.thesis-app .dashboard-card-heading { display: flex; width: 100%; align-items: center; gap: 9px; color: var(--text-secondary); font-size: 10px; font-weight: 600; }
+.thesis-app .dashboard-card-icon { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; color: #a8d4fa; background: #1d4263; border-radius: 7px; }
+.thesis-app .dashboard-icon-unknown { color: #d0dbe5; background: #293a4a; }
+.thesis-app .dashboard-icon-alert { color: #f0ce81; background: #403923; }
+.thesis-app .dashboard-card-value { margin-top: 12px; color: var(--text-primary); font: 700 20px/1.2 Manrope, sans-serif; }
+.thesis-app .dashboard-value-unknown { color: #bdc9d5; }
+.thesis-app .dashboard-overview-card p { margin: 5px 0 0; color: var(--text-secondary); font-size: 9px; line-height: 1.5; }
+.thesis-app .dashboard-card-link { display: inline-flex; align-items: center; gap: 5px; padding: 0; margin-top: auto; color: #8fc5f1; background: none; border: 0; font-size: 9px; font-weight: 600; }
+.thesis-app .dashboard-overview-card-action { width: 100%; cursor: pointer; }
+.thesis-app .dashboard-overview-card-action:hover { background: #193650; border-color: #3b5d7a; }
+.thesis-app .dashboard-overview-card-action:focus-visible { outline: 2px solid #76b8ef; outline-offset: 2px; }
+.thesis-app .dashboard-lower-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 12px; }
+.thesis-app .dashboard-overview-panel { min-width: 0; min-height: 100%; overflow: hidden; }
+.thesis-app .dashboard-panel-heading { display: flex; min-height: 61px; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--border-color); }
+.thesis-app .dashboard-panel-heading h2 { margin: 0 0 3px; color: var(--text-primary); font: 700 12px/1.3 Manrope, sans-serif; }
+.thesis-app .dashboard-panel-heading p { margin: 0; color: var(--text-secondary); font-size: 8px; }
+.thesis-app .dashboard-panel-heading .text-button { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.thesis-app .dashboard-compact-list { display: grid; }
+.thesis-app .dashboard-compact-event { display: flex; min-width: 0; min-height: 58px; align-items: center; gap: 9px; padding: 8px 12px; color: var(--text-primary); background: transparent; border: 0; border-bottom: 1px solid var(--border-color); text-align: left; }
+.thesis-app .dashboard-compact-event:last-child { border-bottom: 0; }
+.thesis-app .dashboard-compact-event:hover { background: #193650; }
+.thesis-app .dashboard-compact-time { display: grid; width: 60px; flex: 0 0 60px; gap: 2px; color: var(--text-secondary); font-size: 8px; }
+.thesis-app .dashboard-compact-time small { color: #829ab2; font-size: 8px; }
+.thesis-app .dashboard-compact-copy { display: grid; flex: 1; min-width: 0; gap: 3px; }
+.thesis-app .dashboard-compact-copy strong { overflow: hidden; color: var(--text-primary); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.thesis-app .dashboard-compact-copy small { overflow: hidden; color: var(--text-secondary); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.thesis-app .dashboard-compact-event .decision-badge { flex: 0 0 auto; padding: 3px 5px; font-size: 7px; }
+.thesis-app .dashboard-activity-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.thesis-app .dashboard-activity-list li { display: grid; gap: 4px; padding: 11px 13px; border-bottom: 1px solid var(--border-color); }
+.thesis-app .dashboard-activity-list li:last-child { border-bottom: 0; }
+.thesis-app .dashboard-activity-time { color: #829ab2; font-size: 8px; }
+.thesis-app .dashboard-activity-list strong { color: var(--text-primary); font-size: 9px; }
+.thesis-app .dashboard-activity-list small { color: var(--text-secondary); font-size: 8px; line-height: 1.45; }
+.thesis-app .dashboard-activity-status { color: #e9c77b; font-size: 7px; line-height: 1.4; }
+.thesis-app .dashboard-overview-empty { padding: 14px; margin: 0; color: var(--text-secondary); font-size: 9px; line-height: 1.6; }
+.thesis-app .dashboard-total-events { color: var(--text-secondary); font-size: 8px; white-space: nowrap; }
+.thesis-app .dashboard-distribution-list { display: grid; gap: 11px; margin: 0; padding: 14px; list-style: none; }
+.thesis-app .dashboard-distribution-list li { display: grid; gap: 5px; }
+.thesis-app .dashboard-distribution-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--text-secondary); font-size: 8px; }
+.thesis-app .dashboard-distribution-label strong { color: var(--text-primary); font-size: 8px; }
+.thesis-app .dashboard-distribution-track { display: block; height: 5px; overflow: hidden; background: #203c58; border-radius: 6px; }
+.thesis-app .dashboard-distribution-track > span { display: block; height: 100%; background: var(--primary-blue); border-radius: inherit; }
+@media (max-width: 1120px) {
+  .thesis-app .dashboard-status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .thesis-app .dashboard-lower-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .thesis-app .dashboard-acoustic-distribution { grid-column: 1 / -1; }
+  .thesis-app .dashboard-distribution-list { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 20px; }
+}
+@media (max-width: 620px) {
+  .thesis-app .dashboard-status-grid,
+  .thesis-app .dashboard-lower-grid { grid-template-columns: minmax(0, 1fr); }
+  .thesis-app .dashboard-acoustic-distribution { grid-column: auto; }
+  .thesis-app .dashboard-distribution-list { grid-template-columns: minmax(0, 1fr); }
+}
+
+.thesis-app {
+  background:
+    radial-gradient(ellipse at 74% -12%, rgb(44 105 160 / 20%), transparent 37rem),
+    radial-gradient(ellipse at 5% 60%, rgb(27 66 105 / 16%), transparent 32rem),
+    var(--page-bg);
+}
+.thesis-app .main-area { background: transparent; }
+.thesis-app .sidebar {
+  background: var(--glass-sidebar);
+  border-right-color: var(--glass-border);
+  box-shadow: 12px 0 34px rgb(0 8 22 / 14%);
+}
+.thesis-app .brand-mark {
+  background: linear-gradient(145deg, #5597d0, #28649c);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+.thesis-app .home-switcher {
+  background: rgb(255 255 255 / 4%);
+  border-color: var(--glass-border);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 3%);
+}
+.thesis-app .nav-group-toggle,
+.thesis-app .nav-item,
+.thesis-app .icon-button,
+.thesis-app .text-button,
+.thesis-app .secondary-button,
+.thesis-app .primary-button {
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+.thesis-app .nav-item-active,
+.thesis-app .nav-item-active:hover {
+  background: linear-gradient(110deg, rgb(59 130 196 / 34%), rgb(36 77 115 / 42%));
+  box-shadow: inset 0 0 0 1px rgb(151 201 242 / 12%), inset 0 1px 0 rgb(255 255 255 / 5%);
+}
+.thesis-app .topbar {
+  background: rgb(11 22 40 / 76%);
+  border-color: var(--glass-border);
+  box-shadow: 0 8px 24px rgb(0 8 22 / 12%);
+}
+.thesis-app .page-content { position: relative; }
+.thesis-app .panel,
+.thesis-app .stat-card,
+.thesis-app .device-card,
+.thesis-app .device-host-card,
+.thesis-app .dashboard-overview-card {
+  background: var(--glass-surface);
+  border-color: var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), var(--glass-shadow);
+}
+.thesis-app .dashboard-overview-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 13px;
+}
+.thesis-app .dashboard-overview-card::before,
+.thesis-app .dashboard-overview-panel::before {
+  position: absolute;
+  top: 0;
+  right: 15%;
+  left: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(220 239 255 / 25%), transparent);
+  content: "";
+  pointer-events: none;
+}
+.thesis-app .dashboard-overview-card-action:hover {
+  background: var(--glass-surface-raised);
+  border-color: rgb(156 202 241 / 25%);
+  transform: translateY(-1px);
+}
+.thesis-app .dashboard-overview-panel {
+  position: relative;
+  border-radius: 13px;
+}
+.thesis-app .dashboard-panel-heading { border-color: var(--glass-border); }
+.thesis-app .dashboard-compact-event,
+.thesis-app .dashboard-activity-list li { border-color: var(--glass-border); }
+.thesis-app .dashboard-compact-event:hover { background: rgb(91 147 194 / 9%); }
+.thesis-app .dashboard-card-icon {
+  background: rgb(59 130 196 / 17%);
+  border: 1px solid rgb(130 189 240 / 11%);
+}
+.thesis-app .dashboard-icon-alert {
+  color: #f1d08b;
+  background: rgb(229 183 94 / 12%);
+}
+.thesis-app .dashboard-icon-unknown {
+  background: rgb(151 173 196 / 9%);
+}
+.thesis-app .dashboard-card-link:hover,
+.thesis-app .text-button:hover { color: #c5e4ff; }
+.thesis-app .secondary-button,
+.thesis-app .primary-button {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%);
+}
+.thesis-app .secondary-button:hover:not(:disabled),
+.thesis-app .primary-button:hover:not(:disabled) { transform: translateY(-1px); }
+.thesis-app .search-box,
+.thesis-app .field-label input,
+.thesis-app .field-label select,
+.thesis-app .history-search,
+.thesis-app .history-filter,
+.thesis-app .demo-role-control select,
+.thesis-app .guest-pass-form input,
+.thesis-app .guest-pass-form select {
+  background: rgb(16 36 59 / 78%);
+  border-color: var(--glass-border);
+}
+.thesis-app .modal-backdrop {
+  z-index: 20;
+  background: rgb(2 8 16 / 74%);
+}
+.thesis-app .event-modal {
+  background: #132a43;
+  border-color: rgb(174 207 237 / 20%);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 50%), inset 0 1px 0 var(--glass-highlight);
+}
+.thesis-app .modal-header {
+  background: rgb(25 54 80 / 92%);
+  border-color: var(--glass-border);
+}
+.thesis-app .notification-popover {
+  z-index: 12;
+  background: #132a43;
+  border-color: var(--glass-border);
+  box-shadow: 0 18px 48px rgb(0 0 0 / 40%);
+}
+.thesis-app .notification-popover-head,
+.thesis-app .notification-item { background: #132a43; border-color: var(--glass-border); }
+.thesis-app .notification-item:hover,
+.thesis-app .notification-unread { background: #193650; }
+@supports (backdrop-filter: blur(1px)) {
+  .thesis-app .sidebar,
+  .thesis-app .topbar,
+  .thesis-app .stat-card,
+  .thesis-app .device-card,
+  .thesis-app .device-host-card,
+  .thesis-app .dashboard-overview-panel,
+  .thesis-app .dashboard-overview-card,
+  .thesis-app .notification-popover {
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    backdrop-filter: blur(var(--glass-blur));
+  }
+}
+@media (max-width: 780px) {
+  .thesis-app .sidebar {
+    background: #0d1f35;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .thesis-app .dashboard-overview-card { min-height: 128px; }
+}
+@media (max-width: 620px) {
+  .thesis-app .dashboard-overview-card,
+  .thesis-app .dashboard-overview-panel { border-radius: 11px; }
+  .thesis-app .dashboard-overview-card { padding: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thesis-app *,
+  .thesis-app *::before,
+  .thesis-app *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

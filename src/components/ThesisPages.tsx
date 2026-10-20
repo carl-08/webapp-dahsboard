@@ -26,29 +26,77 @@ export interface GuestPass {
   expiresAt: string
 }
 
-export function OverviewPage({ events, advancedMode, onOpenEvent, onNavigate }: {
+export function OverviewPage({ events, advancedMode, unreadNotifications, activityEntries, onOpenEvent, onNavigate }: {
   events: SecurityEvent[]
   advancedMode: boolean
   onOpenEvent: (event: SecurityEvent) => void
-  onNavigate: (page: 'Monitoring Modes' | 'Motion Events' | 'Notifications & Alerts' | 'Event History') => void
+  unreadNotifications: number
+  activityEntries: { id: string; timestamp: string; title: string; detail: string; status: string }[]
+  onNavigate: (page: 'Monitoring Modes' | 'Motion Events' | 'Notifications & Alerts' | 'Event History' | 'System Activity Log') => void
 }) {
+  const distribution = acousticClasses.map((acousticClass) => ({
+    acousticClass,
+    count: events.filter((event) => event.acousticClass === acousticClass).length,
+  }))
+  const largestClassCount = Math.max(1, ...distribution.map((item) => item.count))
+  const recentActivities = [...activityEntries].sort((a, b) => b.timestamp.localeCompare(a.timestamp)).slice(0, 3)
+
   return <>
-    <section className="dashboard-system-status">
-      <div className="dashboard-status-item"><span className="status-led status-led-muted" /><div><strong>Hardware</strong><span>Not connected</span></div></div>
-      <div className="dashboard-status-item"><span className="status-led status-led-blue" /><div><strong>Event records</strong><span>Sample data only</span></div></div>
-      <div className="dashboard-status-note">No live device telemetry or backend connection.</div>
-    </section>
-    <section className="dashboard-mode-summary panel">
-      <div><span className="mode-kicker">CURRENT MONITORING MODE</span><h2>{advancedMode ? 'Advanced Monitoring Mode' : 'Standard Mode'} <span className={`mode-state ${advancedMode ? 'mode-state-active' : 'mode-state-off'}`}>{advancedMode ? 'ON' : 'DEFAULT'}</span></h2><p>{advancedMode ? 'Motion-triggered face checks are enabled in this UI prototype.' : 'Audio-triggered workflow is selected. Silent entry is not detected in Standard Mode.'}</p></div>
-      <button className="secondary-button" type="button" onClick={() => onNavigate('Monitoring Modes')}>Monitoring controls <ArrowUpRight size={14} /></button>
-    </section>
-    <section className="panel dashboard-list-panel">
-      <div className="panel-heading"><div><h2>Notifications &amp; Alerts</h2><p>Review all alert levels and sample notification status in one place.</p></div><button className="text-button" onClick={() => onNavigate('Notifications & Alerts')}>Open notifications <ArrowUpRight size={14} /></button></div>
-    </section>
-    <section className="panel dashboard-list-panel">
-      <div className="panel-heading"><div><h2>Recent Events</h2><p>Latest entries in the local sample event set</p></div><button className="text-button" onClick={() => onNavigate('Event History')}>Event history <ArrowUpRight size={14} /></button></div>
-      <div className="dashboard-event-list">{events.slice(0, 4).map((event) => <button className="dashboard-event-row" key={event.id} onClick={() => onOpenEvent(event)}><span className="dashboard-event-time">{formatShortDate(event.timestamp)}<small>{formatTime(event.timestamp)}</small></span><span className="dashboard-list-main"><strong>{event.acousticClass}</strong><small>{event.faceResult}</small></span><DecisionBadge decision={event.decision} /></button>)}</div>
-    </section>
+    <div className="dashboard-overview">
+      <section className="dashboard-status-grid" aria-label="System overview cards">
+        <article className="dashboard-overview-card">
+          <div className="dashboard-card-heading"><span className="dashboard-card-icon dashboard-icon-unknown"><Activity size={16} /></span><span>System Health</span></div>
+          <strong className="dashboard-card-value dashboard-value-unknown">Unknown</strong>
+          <p>Live health checks are not connected.</p>
+        </article>
+        <article className="dashboard-overview-card">
+          <div className="dashboard-card-heading"><span className="dashboard-card-icon"><Mic2 size={16} /></span><span>Monitoring Mode</span></div>
+          <strong className="dashboard-card-value">{advancedMode ? 'Advanced' : 'Standard'}</strong>
+          <p>{advancedMode ? 'Advanced is enabled in this UI demo.' : 'Default mode · audio-triggered workflow.'}</p>
+          <button className="dashboard-card-link" type="button" onClick={() => onNavigate('Monitoring Modes')}>Monitoring controls <ArrowUpRight size={13} /></button>
+        </article>
+        <article className="dashboard-overview-card">
+          <div className="dashboard-card-heading"><span className="dashboard-card-icon"><Cpu size={16} /></span><span>Connected Components</span></div>
+          <strong className="dashboard-card-value dashboard-value-unknown">Unavailable</strong>
+          <p>No hardware or component-health API is connected.</p>
+        </article>
+        <button className="dashboard-overview-card dashboard-overview-card-action" type="button" onClick={() => onNavigate('Notifications & Alerts')}>
+          <div className="dashboard-card-heading"><span className="dashboard-card-icon dashboard-icon-alert"><Bell size={16} /></span><span>Recent Alerts</span></div>
+          <strong className="dashboard-card-value">{unreadNotifications}</strong>
+          <p>Unread demo notifications · not live device alerts.</p>
+          <span className="dashboard-card-link">Open Notifications &amp; Alerts <ArrowUpRight size={13} /></span>
+        </button>
+      </section>
+
+      <section className="dashboard-lower-grid">
+        <article className="panel dashboard-overview-panel dashboard-recent-events">
+          <div className="dashboard-panel-heading"><div><h2>Recent Events</h2><p>Latest event records · demo dataset</p></div><button className="text-button" type="button" onClick={() => onNavigate('Event History')}>Event history <ArrowUpRight size={13} /></button></div>
+          {events.length ? <div className="dashboard-compact-list">{events.slice(0, 4).map((event) => <button className="dashboard-compact-event" key={event.id} type="button" onClick={() => onOpenEvent(event)}>
+            <span className="dashboard-compact-time">{formatShortDate(event.timestamp)}<small>{formatTime(event.timestamp)}</small></span>
+            <span className="dashboard-compact-copy"><strong>{event.acousticClass}</strong><small>{event.faceResult}</small></span>
+            <DecisionBadge decision={event.decision} />
+          </button>)}</div> : <p className="dashboard-overview-empty">No event records are available.</p>}
+        </article>
+
+        <article className="panel dashboard-overview-panel dashboard-activity">
+          <div className="dashboard-panel-heading"><div><h2>System Activity Log</h2><p>In-session UI activity only</p></div><button className="text-button" type="button" onClick={() => onNavigate('System Activity Log')}>Open log <ArrowUpRight size={13} /></button></div>
+          {recentActivities.length ? <ol className="dashboard-activity-list">{recentActivities.map((entry) => <li key={entry.id}>
+            <span className="dashboard-activity-time">{formatShortDate(entry.timestamp)} · {formatTime(entry.timestamp)}</span>
+            <strong>{entry.title}</strong>
+            <small>{entry.detail}</small>
+            <span className="dashboard-activity-status">{entry.status}</span>
+          </li>)}</ol> : <p className="dashboard-overview-empty">No system activity is available. Monitoring-mode changes made in this UI demo will appear here.</p>}
+        </article>
+
+        <article className="panel dashboard-overview-panel dashboard-acoustic-distribution">
+          <div className="dashboard-panel-heading"><div><h2>Acoustic Class Distribution</h2><p>Event counts · demo dataset</p></div><span className="dashboard-total-events">{events.length} events</span></div>
+          {events.length ? <ul className="dashboard-distribution-list">{distribution.map(({ acousticClass, count }) => <li key={acousticClass}>
+            <div className="dashboard-distribution-label"><span>{acousticClass}</span><strong>{count}</strong></div>
+            <span className="dashboard-distribution-track" role="progressbar" aria-label={`${acousticClass} sample events`} aria-valuemin={0} aria-valuemax={largestClassCount} aria-valuenow={count}><span style={{ width: `${(count / largestClassCount) * 100}%` }} /></span>
+          </li>)}</ul> : <p className="dashboard-overview-empty">No sample events to summarize.</p>}
+        </article>
+      </section>
+    </div>
   </>
 }
 
@@ -244,7 +292,7 @@ export function NotificationSettingsPage({ settings, setSettings }: { settings: 
 }
 
 export function SystemSettingsPage({ homeName, setHomeName, savedHomeName, saveName }: { homeName: string; setHomeName: (name: string) => void; savedHomeName: string; saveName: () => void }) {
-  return <div className="settings-layout"><section className="panel settings-panel"><div className="panel-heading"><div><h2>System preferences</h2><p>Prototype identity and data privacy information.</p></div></div><div className="system-setting-form"><label className="field-label">Home / system name<input value={homeName} onChange={(event) => setHomeName(event.target.value)} /></label><button className="secondary-button" onClick={saveName}>Save name</button><span className="save-status">{homeName === savedHomeName ? 'Saved in this session' : 'Unsaved changes'}</span></div><div className="privacy-info"><h3>Data and privacy</h3><p>Sample events are frontend demo data only. Firebase is not configured. This interface stores no credentials, raw audio, continuous video, or facial embeddings.</p></div><div className="privacy-info"><h3>Theme and status</h3><p>Haven’s existing light theme is preserved. Authentication and live telemetry are not implemented.</p></div></section></div>
+  return <div className="settings-layout"><section className="panel settings-panel"><div className="panel-heading"><div><h2>System preferences</h2><p>Prototype identity and data privacy information.</p></div></div><div className="system-setting-form"><label className="field-label">Home / system name<input value={homeName} onChange={(event) => setHomeName(event.target.value)} /></label><button className="secondary-button" onClick={saveName}>Save name</button><span className="save-status">{homeName === savedHomeName ? 'Saved in this session' : 'Unsaved changes'}</span></div><div className="privacy-info"><h3>Data and privacy</h3><p>Sample events are frontend demo data only. Firebase is not configured. This interface stores no credentials, raw audio, continuous video, or facial embeddings.</p></div><div className="privacy-info"><h3>Theme and status</h3><p>COJ-CS’s dark-blue theme is preserved. Authentication and live telemetry are not implemented.</p></div></section></div>
 }
 
 export function L2VerificationPage({ workflowState, remainingSeconds, faceCheckRemaining, onSafe, onNotSafe, onStartDemo, onCreateGuestPass }: {

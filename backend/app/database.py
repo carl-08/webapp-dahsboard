@@ -40,6 +40,18 @@ CREATE TABLE IF NOT EXISTS monitoring_mode (
     mode TEXT NOT NULL CHECK (mode IN ('standard', 'advanced')),
     updated_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS household_members (
+    member_id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    photo_reference TEXT NOT NULL UNIQUE,
+    enrollment_status TEXT NOT NULL CHECK (
+        enrollment_status IN ('pending', 'processing', 'enrolled', 'failed')
+    ),
+    status_message TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 """
 
 

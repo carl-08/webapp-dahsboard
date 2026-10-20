@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
@@ -29,12 +29,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     application.state.database = database
+    application.state.settings = app_settings
     application.add_middleware(
         CORSMiddleware,
         allow_origins=list(app_settings.cors_origins),
         allow_credentials=False,
-        allow_methods=["GET", "POST", "PUT", "OPTIONS"],
-        allow_headers=["Content-Type"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization"],
     )
     application.include_router(router)
     return application
