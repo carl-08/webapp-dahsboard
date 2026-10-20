@@ -13,6 +13,9 @@ import type { DashboardNotification } from '../services/notificationService'
 const formatTime = (timestamp: string) => new Intl.DateTimeFormat('en', { hour: 'numeric', minute: '2-digit' }).format(new Date(timestamp))
 const formatDate = (timestamp: string) => new Intl.DateTimeFormat('en', { month: '2-digit', day: '2-digit', year: 'numeric' }).format(new Date(timestamp))
 const formatShortDate = (timestamp: string) => new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(timestamp))
+const formatFaceResult = (event: SecurityEvent) => event.faceResult === 'Known Person'
+  ? `${demoHouseholdMember.name} · Known member`
+  : event.faceResult === 'No Usable Face' ? 'No face' : 'Unknown person'
 const initialRenderTime = Date.now()
 
 export type DemoRole = 'Administrator' | 'Household member'
@@ -26,23 +29,25 @@ export interface GuestPass {
   expiresAt: string
 }
 
-export function OverviewPage({ events, advancedMode, unreadNotifications, activityEntries, onOpenEvent, onNavigate }: {
+export function OverviewPage({ events, advancedMode, criticalAlert, actionNotice, onOpenEvent, onNavigate, onStopAlarm }: {
   events: SecurityEvent[]
   advancedMode: boolean
+  criticalAlert: DashboardNotification | null
+  actionNotice: string
   onOpenEvent: (event: SecurityEvent) => void
-  unreadNotifications: number
-  activityEntries: { id: string; timestamp: string; title: string; detail: string; status: string }[]
+  onStopAlarm: () => void
   onNavigate: (page: 'Monitoring Modes' | 'Motion Events' | 'Notifications & Alerts' | 'Event History' | 'System Activity Log') => void
 }) {
-  const distribution = acousticClasses.map((acousticClass) => ({
-    acousticClass,
-    count: events.filter((event) => event.acousticClass === acousticClass).length,
-  }))
-  const largestClassCount = Math.max(1, ...distribution.map((item) => item.count))
-  const recentActivities = [...activityEntries].sort((a, b) => b.timestamp.localeCompare(a.timestamp)).slice(0, 3)
+  const latestEvent = events[0]
+  const recentEvents = events.slice(1, 4)
 
   return <>
     <div className="dashboard-overview">
+      {criticalAlert && <article className="dashboard-critical-alert">
+        <div className="dashboard-critical-copy"><span className="dashboard-critical-kicker">ACTIVE {criticalAlert.level} · DEMO WORKFLOW</span><strong>{criticalAlert.title}</strong><span>{criticalAlert.detail} · {formatShortDate(criticalAlert.timestamp)} at {formatTime(criticalAlert.timestamp)}</span></div>
+        <div className="dashboard-critical-actions"><button type="button" onClick={() => onNavigate('Notifications & Alerts')}>Open alert</button><button type="button" onClick={onStopAlarm}>Stop alarm</button></div>
+      </article>}
+      {actionNotice && <p className="dashboard-action-notice" role="status">{actionNotice}</p>}
       <section className="dashboard-status-grid" aria-label="System overview cards">
         <article className="dashboard-overview-card">
           <div className="dashboard-card-heading"><span className="dashboard-card-icon dashboard-icon-unknown"><Activity size={16} /></span><span>System Health</span></div>
@@ -56,44 +61,34 @@ export function OverviewPage({ events, advancedMode, unreadNotifications, activi
           <button className="dashboard-card-link" type="button" onClick={() => onNavigate('Monitoring Modes')}>Monitoring controls <ArrowUpRight size={13} /></button>
         </article>
         <article className="dashboard-overview-card">
-          <div className="dashboard-card-heading"><span className="dashboard-card-icon"><Cpu size={16} /></span><span>Connected Components</span></div>
-          <strong className="dashboard-card-value dashboard-value-unknown">Unavailable</strong>
-          <p>No hardware or component-health API is connected.</p>
+          <div className="dashboard-card-heading"><span className="dashboard-card-icon dashboard-icon-unknown"><Bell size={16} /></span><span>Sounder &amp; Lights</span></div>
+          <strong className="dashboard-card-value dashboard-value-unknown">Not connected</strong>
+          <p>Alarm hardware status is unavailable.</p>
         </article>
-        <button className="dashboard-overview-card dashboard-overview-card-action" type="button" onClick={() => onNavigate('Notifications & Alerts')}>
-          <div className="dashboard-card-heading"><span className="dashboard-card-icon dashboard-icon-alert"><Bell size={16} /></span><span>Recent Alerts</span></div>
-          <strong className="dashboard-card-value">{unreadNotifications}</strong>
-          <p>Unread demo notifications · not live device alerts.</p>
-          <span className="dashboard-card-link">Open Notifications &amp; Alerts <ArrowUpRight size={13} /></span>
-        </button>
+        <article className="dashboard-overview-card">
+          <div className="dashboard-card-heading"><span className="dashboard-card-icon dashboard-icon-unknown"><Users size={16} /></span><span>Alert Recipients</span></div>
+          <strong className="dashboard-card-value dashboard-value-unknown">Not connected</strong>
+          <p>Recipient delivery status is unavailable.</p>
+        </article>
       </section>
 
       <section className="dashboard-lower-grid">
+        <article className="panel dashboard-overview-panel dashboard-latest-event">
+          <div className="dashboard-panel-heading"><div><h2>Latest Event</h2><p>One concise summary · sample data</p></div><button className="text-button" type="button" onClick={() => onNavigate('Event History')}>Event log <ArrowUpRight size={13} /></button></div>
+          {latestEvent ? <button className="dashboard-latest-summary" type="button" onClick={() => onOpenEvent(latestEvent)}>
+            <span className="dashboard-latest-meta">{formatShortDate(latestEvent.timestamp)} · {formatTime(latestEvent.timestamp)}<DecisionBadge decision={latestEvent.decision} /></span>
+            <strong>{latestEvent.acousticClass}</strong>
+            <span>{formatFaceResult(latestEvent)}</span>
+            <span className="dashboard-card-link">Open event details <ArrowUpRight size={13} /></span>
+          </button> : <p className="dashboard-overview-empty">No event records are available.</p>}
+        </article>
         <article className="panel dashboard-overview-panel dashboard-recent-events">
-          <div className="dashboard-panel-heading"><div><h2>Recent Events</h2><p>Latest event records · demo dataset</p></div><button className="text-button" type="button" onClick={() => onNavigate('Event History')}>Event history <ArrowUpRight size={13} /></button></div>
-          {events.length ? <div className="dashboard-compact-list">{events.slice(0, 4).map((event) => <button className="dashboard-compact-event" key={event.id} type="button" onClick={() => onOpenEvent(event)}>
+          <div className="dashboard-panel-heading"><div><h2>Recent Events</h2><p>Three compact links · same event history</p></div><button className="text-button" type="button" onClick={() => onNavigate('Event History')}>Event log <ArrowUpRight size={13} /></button></div>
+          {recentEvents.length ? <div className="dashboard-compact-list">{recentEvents.map((event) => <button className="dashboard-compact-event" key={event.id} type="button" onClick={() => onOpenEvent(event)}>
             <span className="dashboard-compact-time">{formatShortDate(event.timestamp)}<small>{formatTime(event.timestamp)}</small></span>
-            <span className="dashboard-compact-copy"><strong>{event.acousticClass}</strong><small>{event.faceResult}</small></span>
+            <span className="dashboard-compact-copy"><strong>{event.acousticClass}</strong><small>{formatFaceResult(event)}</small></span>
             <DecisionBadge decision={event.decision} />
-          </button>)}</div> : <p className="dashboard-overview-empty">No event records are available.</p>}
-        </article>
-
-        <article className="panel dashboard-overview-panel dashboard-activity">
-          <div className="dashboard-panel-heading"><div><h2>System Activity Log</h2><p>In-session UI activity only</p></div><button className="text-button" type="button" onClick={() => onNavigate('System Activity Log')}>Open log <ArrowUpRight size={13} /></button></div>
-          {recentActivities.length ? <ol className="dashboard-activity-list">{recentActivities.map((entry) => <li key={entry.id}>
-            <span className="dashboard-activity-time">{formatShortDate(entry.timestamp)} · {formatTime(entry.timestamp)}</span>
-            <strong>{entry.title}</strong>
-            <small>{entry.detail}</small>
-            <span className="dashboard-activity-status">{entry.status}</span>
-          </li>)}</ol> : <p className="dashboard-overview-empty">No system activity is available. Monitoring-mode changes made in this UI demo will appear here.</p>}
-        </article>
-
-        <article className="panel dashboard-overview-panel dashboard-acoustic-distribution">
-          <div className="dashboard-panel-heading"><div><h2>Acoustic Class Distribution</h2><p>Event counts · demo dataset</p></div><span className="dashboard-total-events">{events.length} events</span></div>
-          {events.length ? <ul className="dashboard-distribution-list">{distribution.map(({ acousticClass, count }) => <li key={acousticClass}>
-            <div className="dashboard-distribution-label"><span>{acousticClass}</span><strong>{count}</strong></div>
-            <span className="dashboard-distribution-track" role="progressbar" aria-label={`${acousticClass} sample events`} aria-valuemin={0} aria-valuemax={largestClassCount} aria-valuenow={count}><span style={{ width: `${(count / largestClassCount) * 100}%` }} /></span>
-          </li>)}</ul> : <p className="dashboard-overview-empty">No sample events to summarize.</p>}
+          </button>)}</div> : <p className="dashboard-overview-empty">No additional recent events.</p>}
         </article>
       </section>
     </div>
@@ -208,36 +203,18 @@ export function SystemStatusPage() {
   </section>
 }
 
-export function SystemActivityLogPage({ notifications, modeActivity }: {
-  notifications: DashboardNotification[]
+export function SystemActivityLogPage({ modeActivity }: {
   modeActivity: { id: string; timestamp: string; title: string; detail: string; status: string }[]
 }) {
-  const logEntries = [
-    ...notifications.map((entry) => ({
-      id: entry.id,
-      timestamp: entry.timestamp,
-      title: entry.title,
-      detail: entry.detail,
-      status: entry.status,
-      level: entry.level,
-      acknowledgementStatus: entry.acknowledgementStatus,
-      deliveryStatus: entry.deliveryStatus,
-    })),
-    ...modeActivity.map((entry) => ({
-      ...entry,
-      level: 'SYSTEM',
-      acknowledgementStatus: 'Not recorded',
-      deliveryStatus: 'Not applicable',
-    })),
-  ].sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+  const logEntries = [...modeActivity].sort((a, b) => b.timestamp.localeCompare(a.timestamp))
   return <section className="panel system-activity-panel">
-    <div className="panel-heading"><div><h2>System Activity Log</h2><p>{logEntries.length} event records · sample and simulated data only</p></div><span className="demo-chip">NO SYSTEM AUDIT FEED</span></div>
-    <p className="system-activity-disclaimer"><Info size={15} /> Startup/shutdown, component connectivity, access, and SMS delivery logs are not available in this app. Entries below reuse the existing sample event and in-session simulated motion data; they are not a system audit log.</p>
+    <div className="panel-heading"><div><h2>System Activity Log</h2><p>{logEntries.length} in-session mode changes · demo only</p></div><span className="demo-chip">NO SYSTEM AUDIT FEED</span></div>
+    <p className="system-activity-disclaimer"><Info size={15} /> Startup/shutdown, component connectivity, event, access, and SMS delivery logs are not available here. Event and alert history is kept in Notifications &amp; Alerts and Event History, not duplicated in this log.</p>
     {logEntries.length ? <ol className="system-activity-list">{logEntries.map((entry) => <li className="system-activity-entry" key={entry.id}>
       <span className="system-activity-time">{new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(entry.timestamp))}</span>
-      <span className="system-activity-copy"><strong>{entry.title}</strong><span>{entry.detail}</span>{entry.acknowledgementStatus !== 'Not recorded' && <span>{entry.acknowledgementStatus}</span>}<span>{entry.deliveryStatus}</span></span>
-      <span className={`system-activity-status ${entry.level.startsWith('L4') ? 'system-activity-status-alert' : ''}`}>{entry.status}</span>
-    </li>)}</ol> : <div className="empty-state"><span><FileClock size={18} /></span><strong>No event activity recorded</strong><p>New events will appear here when available.</p></div>}
+      <span className="system-activity-copy"><strong>{entry.title}</strong><span>{entry.detail}</span></span>
+      <span className="system-activity-status">{entry.status}</span>
+    </li>)}</ol> : <div className="empty-state"><span><FileClock size={18} /></span><strong>No system activity recorded</strong><p>Only UI monitoring-mode changes will appear here until a backend audit feed is integrated.</p></div>}
   </section>
 }
 
@@ -311,13 +288,13 @@ export function L2VerificationPage({ workflowState, remainingSeconds, faceCheckR
       <div className="verification-timer"><Clock3 size={17} /><span>Response window</span><strong role="timer" aria-label={`${remainingSeconds} seconds remaining`}>{countdown}</strong></div>
       <div className="verification-content"><span className="verification-symbol"><UserRound size={25} /></span><div><h2>Unknown person detected</h2><p>A simulated face check found no enrolled household match. Please confirm whether this person is safe.</p></div></div>
       <div className="verification-context"><ShieldCheck size={16} /><span>Face recognition is contextual; an unknown match is not, by itself, a threat determination.</span></div>
-      <div className="verification-actions"><button className="safe-action" type="button" onClick={onSafe}><Check size={16} /> Safe</button><button className="unsafe-action" type="button" onClick={onNotSafe}><CircleAlert size={16} /> Not Safe</button></div>
-      <p className="prototype-disclaimer">Safe / Not Safe responses and the 60-second timer are local UI simulation only.</p>
+      <div className="verification-actions"><button className="safe-action" type="button" onClick={onSafe}><Check size={16} /> Everything is fine</button><button className="unsafe-action" type="button" onClick={onNotSafe}><CircleAlert size={16} /> Needs help</button></div>
+      <p className="prototype-disclaimer">This 60-second countdown and both response buttons are a local UI demonstration; no backend verification is connected.</p>
     </article> : workflowState === 'face-check' ? <article className="verification-empty panel"><span className="workflow-icon"><Video size={19} /></span><h2>10-second face check in progress</h2><p>Motion was detected in the simulated workflow. The L2 prompt will appear after the face-check timer completes.</p><div className="face-check-progress"><span style={{ width: `${((10 - faceCheckRemaining) / 10) * 100}%` }} /></div><strong>{faceCheckRemaining} seconds remaining</strong></article> : workflowState === 'safe' ? <article className="verification-empty panel verification-safe-result"><span className="verification-symbol"><Check size={22} /></span><h2>Marked safe</h2><p>The simulated verification was resolved as safe. No L4 escalation was triggered.</p><button className="secondary-button" type="button" onClick={onCreateGuestPass}>Create optional guest pass</button><span className="prototype-disclaimer">Guest passes are local demo state only and grant no physical or recording access.</span></article> : <article className="verification-empty panel"><span className="verification-symbol"><UserRound size={23} /></span><h2>No active verification</h2><p>Run a sample unknown-person prompt to preview the L2 screen and its 60-second response window.</p><button className="primary-button" type="button" onClick={onStartDemo}><Bell size={14} /> Start simulated L2 prompt</button><span className="prototype-disclaimer">No camera, identity matching, or notifications are connected.</span></article>}
   </section>
 }
 
-export function L4HighAlertPage({ active, onReturn }: { active: boolean; onReturn: () => void }) {
+export function L4HighAlertPage({ active, onAcknowledge }: { active: boolean; onAcknowledge: () => void }) {
   return <section className="high-alert-screen">
     <div className="high-alert-heading"><span className="high-alert-level">L4 · HIGH ALERT</span><span className="demo-chip">SIMULATED WORKFLOW</span></div>
     <article className={`high-alert-card panel ${active ? 'high-alert-active' : ''}`}>
@@ -327,7 +304,7 @@ export function L4HighAlertPage({ active, onReturn }: { active: boolean; onRetur
       <p>{active ? 'The simulated L2 response window expired or was marked Not Safe. Review the event using your household’s response plan.' : 'This is the consistent L4 high-alert presentation. No active demo escalation is in progress.'}</p>
       <div className="high-alert-facts"><span>Escalation level <strong>L4 High Alert</strong></span><span>Source <strong>{active ? 'L2 verification' : 'No active event'}</strong></span><span>System action <strong>UI state only</strong></span></div>
       <p className="prototype-disclaimer">No SMS, physical alarm, emergency service, or backend alert is triggered by this screen.</p>
-      <button className="secondary-button" type="button" onClick={onReturn}>Return to overview</button>
+      {active && <button className="unsafe-action" type="button" onClick={onAcknowledge}>Acknowledge high alert · demo</button>}
     </article>
   </section>
 }

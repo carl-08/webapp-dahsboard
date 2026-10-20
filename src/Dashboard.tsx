@@ -15,7 +15,7 @@ import { demoHouseholdMember, demoSystem } from './services/systemService'
 import type { SecurityEvent } from './models/securityEvent'
 import './App.css'
 
-type Page = 'Overview' | 'Notifications & Alerts' | 'Event History' | 'System Status' | 'System Activity Log' | 'Household Members' | 'Guest Passes' | 'Notification Settings' | 'Privacy Settings' | 'System Settings' | 'Monitoring Modes' | 'Motion Events' | 'Live View'
+type Page = 'Overview' | 'Notifications & Alerts' | 'Event History' | 'System Status' | 'System Activity Log' | 'Household Members' | 'Guest Passes' | 'Notification Settings' | 'Privacy Settings' | 'System Settings' | 'Monitoring Modes' | 'Motion Events' | 'Live View' | 'Recordings'
 interface NavigationItem {
   label: string
   page: Page
@@ -31,20 +31,21 @@ const groups: NavigationGroup[] = [
   { key: 'overview', title: 'Overview', icon: LayoutDashboard, items: [{ label: 'Dashboard', page: 'Overview', icon: LayoutDashboard }] },
   { key: 'alerts-events', title: 'Alerts & Events', icon: Bell, items: [
     { label: 'Notifications & Alerts', page: 'Notifications & Alerts', icon: Bell },
-    { label: 'Event History', page: 'Event History', icon: FileClock },
+    { label: 'Event Log', page: 'Event History', icon: FileClock },
   ] },
-  { key: 'users-monitoring', title: 'Users & Monitoring', icon: Users, items: [
-    { label: 'User Enrollment', page: 'Household Members', icon: Users },
-    { label: 'Live Monitoring', page: 'Live View', icon: Camera },
+  { key: 'members-guests', title: 'Members & Guests', icon: Users, items: [
+    { label: 'Members & Guests', page: 'Household Members', icon: Users },
+    { label: 'Guest Passes', page: 'Guest Passes', icon: Users },
+  ] },
+  { key: 'monitoring', title: 'Monitoring', icon: Camera, items: [
+    { label: 'Live View', page: 'Live View', icon: Camera },
+    { label: 'Recordings', page: 'Recordings', icon: FileClock },
     { label: 'Motion Events', page: 'Motion Events', icon: Activity },
   ] },
   { key: 'device-status', title: 'Device Status', icon: Cpu, items: [
     { label: 'System Health', page: 'System Status', icon: Activity },
     { label: 'Monitoring Mode', page: 'Monitoring Modes', icon: Settings },
     { label: 'System Activity Log', page: 'System Activity Log', icon: FileClock },
-  ] },
-  { key: 'camera-visitors', title: 'Camera & Visitors', icon: Camera, items: [
-    { label: 'Guest Passes', page: 'Guest Passes', icon: Users },
   ] },
   { key: 'settings', title: 'Settings', icon: Settings, items: [
     { label: 'Notification Settings', page: 'Notification Settings', icon: Bell },
@@ -55,10 +56,10 @@ const groups: NavigationGroup[] = [
 const emptyFilters: EventFilters = { search: '', startDate: '', endDate: '', acousticClass: 'All', faceResult: 'All', decision: 'All' }
 const subtitles: Record<Page, string> = {
   Overview: 'COJ-CS System Overview',
-  'Notifications & Alerts': 'Review notifications, alert levels, simulated verification, and sample event status.',
+  'Notifications & Alerts': 'Review each event once, filter by severity, and access the linked event details.',
   'Event History': 'Search and filter the recorded audio-triggered event history.',
   'System Status': 'Current component health availability and required backend integrations.',
-  'System Activity Log': 'Chronological sample event activity from the existing event records.',
+  'System Activity Log': 'In-session monitoring-mode changes; no backend audit feed is connected.',
   'Household Members': 'Manage enrollment status without exposing biometric data.',
   'Guest Passes': 'Create temporary guest passes that expire after 1–7 days.',
   'Notification Settings': 'Configure channels for future system integration.',
@@ -67,6 +68,7 @@ const subtitles: Record<Page, string> = {
   'Monitoring Modes': 'Choose the household monitoring mode. Advanced mode remains off by default.',
   'Motion Events': 'Preview the advanced motion-triggered workflow. Hardware is not connected.',
   'Live View': 'Camera live view is unavailable in this prototype.',
+  Recordings: 'Recording playback is not available in this prototype.',
 }
 
 function navigationGroupForPage(page: Page) {
@@ -77,6 +79,7 @@ export default function Dashboard() {
   const [page, setPage] = useState<Page>('Overview')
   const [notifications, setNotifications] = useState(() => notificationsFromEvents(demoEvents))
   const [selectedEvent, setSelectedEvent] = useState<SecurityEvent | null>(null)
+  const [actionNotice, setActionNotice] = useState('')
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['alerts-events'])
   const [filters, setFilters] = useState(emptyFilters)
@@ -98,6 +101,9 @@ export default function Dashboard() {
   const guestPassSequence = useRef(0)
   const visibleEvents = useMemo(() => queryEvents(demoEvents, { ...filters, search: [filters.search, query].filter(Boolean).join(' ') }), [filters, query])
   const unread = notifications.filter((item) => !item.read).length
+  const activeCriticalAlert = workflowState === 'high-alert'
+    ? notifications.find((item) => item.id === motionNotificationId && item.levelCode === 'L4' && item.acknowledgementStatus !== 'Acknowledged') ?? null
+    : null
   const todayText = new Intl.DateTimeFormat('en', { weekday: 'long', month: 'long', day: 'numeric' }).format(new Date())
   const isAdministrator = demoRole === 'Administrator'
 
@@ -109,7 +115,7 @@ export default function Dashboard() {
           setWorkflowState('verification')
           setVerificationRemaining(60)
           setPage('Notifications & Alerts')
-          updateNotification(motionNotificationId, { level: 'L2 · Verification', status: 'L2 verification required' })
+          updateNotification(motionNotificationId, { level: 'L2 · Verification', levelCode: 'L2', status: 'L2 verification required', active: true })
         } else {
           setWorkflowState(motionOutcome === 'known' ? 'known-face' : 'no-face')
           setPage('Motion Events')
@@ -131,7 +137,7 @@ export default function Dashboard() {
       if (verificationRemaining <= 1) {
         setWorkflowState('high-alert')
         setPage('Notifications & Alerts')
-        updateNotification(motionNotificationId, { level: 'L4 · High Alert', status: 'L2 timer expired · escalated to L4' })
+        updateNotification(motionNotificationId, { level: 'L4 · High Alert', levelCode: 'L4', status: 'L2 timer expired · escalated to L4', active: true })
       } else {
         setVerificationRemaining(verificationRemaining - 1)
       }
@@ -160,11 +166,21 @@ export default function Dashboard() {
   }
 
   const markAllRead = () => setNotifications((items) => items.map((item) => ({ ...item, read: true })))
+  const markNotificationRead = (id: string) => updateNotification(id, { read: true })
+  const markReviewed = (id: string) => updateNotification(id, { reviewed: true, status: 'Reviewed · demo UI state' })
+  const acknowledgeNotification = (id: string) => {
+    updateNotification(id, { acknowledgementStatus: 'Acknowledged · demo UI state', active: false, status: 'Acknowledged · demo UI state' })
+    if (id === motionNotificationId) setWorkflowState('idle')
+  }
+  const markFalseAlarm = (id: string) => {
+    updateNotification(id, { falseTrigger: true, active: false, status: 'False trigger · retained in demo history' })
+    if (id === motionNotificationId) setWorkflowState('idle')
+  }
 
   function simulateMotion(outcome: DemoFaceOutcome) {
     if (!advancedMode || !isAdministrator) return
     const timestamp = new Date().toISOString()
-    const notificationId = `motion-${Date.now()}`
+    const notificationId = `motion-${crypto.randomUUID()}`
     setMotionOutcome(outcome)
     setMotionTimestamp(timestamp)
     setMotionNotificationId(notificationId)
@@ -174,6 +190,7 @@ export default function Dashboard() {
       source: 'motion',
       kind: 'MOTION',
       level: 'Motion',
+      levelCode: 'Event',
       title: 'Motion detected',
       detail: 'Simulated motion event · 10-second face check started',
       timestamp,
@@ -181,6 +198,11 @@ export default function Dashboard() {
       status: '10-second face check in progress',
       acknowledgementStatus: 'Not available',
       deliveryStatus: 'Simulation only · no device notification sent',
+      decision: 'Pending visual verification',
+      snapshotUrl: null,
+      reviewed: false,
+      falseTrigger: false,
+      active: false,
     }, ...items])
     setFaceCheckRemaining(10)
     setVerificationRemaining(60)
@@ -232,22 +254,31 @@ export default function Dashboard() {
         <div className="topbar-actions"><label className="search-box"><Search size={17} /><input aria-label="Search events" placeholder="Search events..." value={query} onChange={(event) => setQuery(event.target.value)} />{query && <button className="search-clear" aria-label="Clear search" onClick={() => setQuery('')}><X size={14} /></button>}</label><button className="icon-button notification-button" aria-label={`Notifications & Alerts, ${unread} unread`} onClick={() => navigate('Notifications & Alerts')}><Bell size={19} />{unread > 0 && <span className="notification-count">{unread > 99 ? '99+' : unread}</span>}</button><span className="topbar-divider" /><span className="today-label">{todayText}</span></div>
       </header>
       <div className="page-content"><div className="page-heading"><div><p className="eyebrow">{page === 'Overview' ? 'COJ-CS SYSTEM OVERVIEW' : 'COJ-CS SECURITY DASHBOARD'}</p><h1>{groups.flatMap((group) => group.items).find((item) => item.page === page)?.label ?? page}</h1><p className="page-subtitle">{subtitles[page]}</p></div>{(page === 'Overview' || page === 'Notifications & Alerts') && <span className="demo-chip">DEMO DATA</span>}</div>
-        {page === 'Overview' && <OverviewPage events={demoEvents} advancedMode={advancedMode} unreadNotifications={unread} activityEntries={modeActivity} onOpenEvent={setSelectedEvent} onNavigate={navigate} />}
+        {page === 'Overview' && <OverviewPage events={demoEvents} advancedMode={advancedMode} criticalAlert={activeCriticalAlert} actionNotice={actionNotice} onOpenEvent={setSelectedEvent} onNavigate={navigate} onStopAlarm={() => setActionNotice('Alarm stop was not sent: physical alarm control is not connected.')} />}
         {page === 'Notifications & Alerts' && <>
-          {(workflowState === 'face-check' || workflowState === 'verification' || workflowState === 'safe') && <L2VerificationPage workflowState={workflowState} remainingSeconds={verificationRemaining} faceCheckRemaining={faceCheckRemaining} onSafe={() => {
+          {(workflowState === 'face-check' || workflowState === 'verification') && <L2VerificationPage workflowState={workflowState} remainingSeconds={verificationRemaining} faceCheckRemaining={faceCheckRemaining} onSafe={() => {
             setWorkflowState('safe')
-            updateNotification(motionNotificationId, { status: 'Marked Safe · demo response', acknowledgementStatus: 'Safe response · demo only' })
+            updateNotification(motionNotificationId, { status: 'Everything is fine · demo response', acknowledgementStatus: 'Safe response · demo only', active: false })
           }} onNotSafe={() => {
             setWorkflowState('high-alert')
-            updateNotification(motionNotificationId, { level: 'L4 · High Alert', status: 'Not Safe · escalated to L4', acknowledgementStatus: 'Not Safe response · demo only' })
+            updateNotification(motionNotificationId, { level: 'L4 · High Alert', levelCode: 'L4', status: 'Needs help · escalated to L4 in demo', acknowledgementStatus: 'Needs help response · demo only', active: true })
           }} onStartDemo={() => { setVerificationRemaining(60); setWorkflowState('verification') }} onCreateGuestPass={() => navigate('Guest Passes')} />}
-          {workflowState === 'high-alert' && <L4HighAlertPage active onReturn={() => navigate('Overview')} />}
-          <NotificationCenter notifications={notifications} onOpen={openNotification} onMarkAllRead={markAllRead} />
+          {workflowState === 'high-alert' && <L4HighAlertPage active onAcknowledge={() => acknowledgeNotification(motionNotificationId ?? '')} />}
+          <NotificationCenter
+            notifications={notifications}
+            hiddenNotificationIds={motionNotificationId && (workflowState === 'face-check' || workflowState === 'verification' || workflowState === 'high-alert') ? [motionNotificationId] : []}
+            onOpen={openNotification}
+            onMarkAllRead={markAllRead}
+            onMarkRead={markNotificationRead}
+            onReviewed={markReviewed}
+            onAcknowledge={acknowledgeNotification}
+            onFalseAlarm={markFalseAlarm}
+          />
           <button className="text-button notification-history-link" type="button" onClick={() => navigate('Event History')}>Open detailed event history <FileClock size={14} /></button>
         </>}
         {page === 'Event History' && <EventHistoryPage events={visibleEvents} filters={filters} setFilters={setFilters} onOpenEvent={setSelectedEvent} />}
         {page === 'System Status' && <SystemStatusPage />}
-        {page === 'System Activity Log' && <SystemActivityLogPage notifications={notifications} modeActivity={modeActivity} />}
+        {page === 'System Activity Log' && <SystemActivityLogPage modeActivity={modeActivity} />}
         {page === 'Monitoring Modes' && <MonitoringModesPage demoRole={demoRole} onDemoRoleChange={setDemoRole} isAdministrator={isAdministrator} advancedMode={advancedMode} onAdvancedModeChange={(enabled) => {
           setAdvancedMode(enabled)
           setModeActivity((entries) => [...entries, {
@@ -260,6 +291,7 @@ export default function Dashboard() {
         }} />}
         {page === 'Motion Events' && <MotionEventsPage workflowState={workflowState} faceCheckRemaining={faceCheckRemaining} motionTimestamp={motionTimestamp} isAdministrator={isAdministrator} advancedMode={advancedMode} onSimulateMotion={simulateMotion} onOpenVerification={() => navigate('Notifications & Alerts')} />}
         {page === 'Live View' && <LiveViewPage />}
+        {page === 'Recordings' && <section className="panel system-activity-panel"><div className="panel-heading"><div><h2>Recordings unavailable</h2><p>No playback or recording archive is connected.</p></div><span className="demo-chip">NOT INTEGRATED</span></div><p className="system-activity-disclaimer"><FileClock size={15} /> Event snapshots, when present, are available from the corresponding event details. Continuous recording and playback are not implemented.</p></section>}
         {page === 'Household Members' && <UserEnrollmentPage />}
         {page === 'Guest Passes' && <GuestPassesPage passes={guestPasses} onCreatePass={createGuestPass} onRevokePass={(id) => setGuestPasses((passes) => passes.filter((pass) => pass.id !== id))} />}
         {page === 'Notification Settings' && <NotificationSettingsPage settings={notificationSettings} setSettings={setNotificationSettings} />}
